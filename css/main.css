@@ -1,0 +1,274 @@
+body{
+    width:100%;
+    height:100%;
+    margin:0px auto;
+    overflow-x:hidden;
+}
+
+@font-face {
+    font-family: 'iconfont';  /* project id 149377 */
+    src: url('//at.alicdn.com/t/font_149377_rals6asy6o.eot');
+    src: url('//at.alicdn.com/t/font_149377_rals6asy6o.eot?#iefix') format('embedded-opentype'),
+    url('//at.alicdn.com/t/font_149377_rals6asy6o.woff') format('woff'),
+    url('//at.alicdn.com/t/font_149377_rals6asy6o.ttf') format('truetype'),
+    url('//at.alicdn.com/t/font_149377_rals6asy6o.svg#iconfont') format('svg');
+  }
+
+.icon{
+    font-family: iconfont;
+    font-size: 18px;
+    font-style: normal;
+}
+.ico{
+    font-family: iconfont;
+    font-size: 39px;
+    font-style: normal;
+    color: #1cb1f2;
+}
+.ic{
+    font-family: iconfont;
+    font-size: 42px;
+    font-style: normal;
+    color: #ff771e;
+}
+
+a.color:link {color: #FFF  }     /* 未访问的链接 */
+a.color:visited {color: #FFF  }  /* 已访问的链接*/
+a.color:hover {color: #00efff }   /* 当有鼠标悬停在链接上 */
+a.color:active {color: #FFF}  /* 被选择的链接 */
+
+.jz{
+    width: 188px;
+    height: 188px;
+    margin: 0 auto;
+}
+
+.bg{
+    top:0;
+    left:0;
+    height:100%;
+    width:100%;
+    background-position: center 0;
+    background-repeat: no-repeat;
+    background-attachment:fixed;
+    background-size: cover;
+    -webkit-background-size: cover;/* 兼容Webkit内核Chrome和Safari */
+    -o-background-size: cover;
+    zoom: 1;
+}
+
+.showtitle{
+    float: left;
+    width: 100%;
+    margin: 18% 0 0 0;
+    border-width:0;
+    text-align: center;
+    font-size: 36px;
+    font-weight: 100;
+    opacity: 0;
+    font-family: "微软雅黑 Light";
+    letter-spacing: 5px;
+    vertical-align: middle;
+    color: #fff;
+    clear: both;
+}
+
+@media (max-width: 666px){
+    .showtitle{  margin: 50% 0 0 0; font-size: 19px;}
+    .jz{width: 160px;height: 160px;}
+    .name{margin: 12% 0 19px 1px}
+}
+@media (min-width: 780px){
+    .showtitle{  margin: 18% 0 0 0;  }
+    .name{margin: 3% 0 30px 1px}
+}
+@media (min-width: 1920px){
+    .showtitle{  margin: 18% 0 0 0;  }
+    .name{margin: 12% 0 60px 1px}
+}
+
+
+.name{
+    float: left;
+    width: 100%;
+    text-align: center;
+    font-size: 17px;
+    font-family: "微软雅黑 Light";
+    color: #ffffff;
+}
+
+.rofont {
+    font-size: 12px;
+    color: #00efff;
+    position: absolute;
+    cursor: pointer;
+    left: 49.3%;
+    bottom: 7.36%;
+}
+
+.bgdiv{
+    width:100%;
+    height:100%;
+    position:absolute;
+    z-index:-999;
+    background-color: #000;
+}
+
+.bgdiv img{
+    position:absolute;
+    width:100%;
+    height:100%;
+}
+
+.logo{
+    float: left;
+    margin: 0px 10px 0 0;
+}
+
+.font{
+    float: left;
+    margin: 26px 0 0 16px;
+    font-size: 18px;
+    font-weight: 100;
+    font-family: "微软雅黑 Light";
+    letter-spacing: 3px;
+    vertical-align: middle;
+    color: #ffffff;
+}
+
+*,*:before,*:after {
+    box-sizing: inherit
+}
+.progress {
+    margin: 0 auto;
+    margin-top: 18%;
+    position: relative
+}
+
+
+.progress.ro span {
+    position: absolute;
+    -ms-transform: rotate(225deg);
+    transform: rotate(225deg);
+    animation: orbit 5s infinite
+}
+
+.progress.ro span:after {
+    content: '';
+    position: absolute;
+    border-radius: 100%;
+    background-color: #FFF;
+    animation:colorful 36.6s infinite linear;
+}
+
+.progress.ro span:nth-child(2) {
+    animation-delay: 260ms
+}
+
+.progress.ro span:nth-child(3) {
+    animation-delay: 510ms
+}
+
+.progress.ro span:nth-child(4) {
+    animation-delay: 750ms
+}
+
+.progress.ro span:nth-child(5) {
+    animation-delay: 990ms
+}
+
+.progress.ro.dot {
+    position: absolute;
+    left: 49%;
+    bottom: 8.8%;
+    width: 20px;
+    height: 20px
+}
+
+.progress.ro.dot span {
+    width:56px;
+    height: 56px
+}
+
+.progress.ro.dot span:after {
+    width: 8px;
+    height: 8px
+}
+
+@keyframes orbit {
+    0% {
+        transform: rotate(225deg);
+        opacity: 1;
+        animation-timing-function: ease-out
+    }
+    7% {
+        transform: rotate(345deg);
+        animation-timing-function: linear
+    }
+    30% {
+        transform: rotate(455deg);
+        animation-timing-function: ease-in-out
+    }
+    39% {
+        transform: rotate(690deg);
+        animation-timing-function: linear
+    }
+    70% {
+        transform: rotate(815deg);
+        opacity: 1;
+        animation-timing-function: ease-out
+    }
+    75% {
+        transform: rotate(945deg);
+        animation-timing-function: ease-out
+    }
+    76% {
+        transform: rotate(945deg);
+        opacity: 0
+    }
+    100% {
+        transform: rotate(945deg);
+        opacity: 0
+    }
+}
+
+@keyframes colorful{
+    0%{ background-color:#1cb1f2}
+    6%{ background-color:#1cb1f2}
+    25%{ background-color: #0b5fff}
+    39%{ background-color: #7d3eff}
+    50%{ background-color: #df24e1}
+    55%{ background-color: #e13724}
+    60%{ background-color: #e1cc42}
+    63%{ background-color: #3ee104}
+    80%{ background-color: #27e1c9}
+    88%{ background-color:#1cb1f2}
+    100%{ background-color: #1cb1f2}
+}
+
+.info{
+    color: #fff33c;
+    font-weight:600;
+}
+    .hot{
+    color: #fe6500;
+    font-weight:600;
+    font-size:18px;
+    background:rgba(0,0,0,0.3);
+    border-top:1px solid;
+    border-bottom:1px solid;
+    line-height:39px;
+}
+.buy{
+    cursor:pointer;
+    color: #ffedab;
+    border:1px solid;
+    padding:3px 6px;
+    border-radius:6px;
+    transition: all 0.36s;
+    margin-left:18px
+}
+    .buy:hover{
+    background: #ffedab;
+    color: #ff0000;
+}
