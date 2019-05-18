@@ -38,8 +38,8 @@ a.color:hover {color: #00efff }   /* 当有鼠标悬停在链接上 */
 a.color:active {color: #FFF}  /* 被选择的链接 */
 
 .jz{
-    width: 188px;
-    height: 188px;
+    width: 180px;
+    height: 180px;
     margin: 0 auto;
 }
 
@@ -67,7 +67,7 @@ a.color:active {color: #FFF}  /* 被选择的链接 */
     font-weight: 100;
     opacity: 0;
     font-family: "微软雅黑 Light";
-    letter-spacing: 5px;
+    letter-spacing: 3px;
     vertical-align: middle;
     color: #fff;
     clear: both;
