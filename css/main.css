@@ -261,9 +261,10 @@ a.color:active {color: #FFF}  /* 被选择的链接 */
 }
 .buy{
     cursor:pointer;
+    text-decoration: none;
     color: #ffedab;
     border:1px solid;
-    padding:3px 6px;
+    padding:2px 6px;
     border-radius:6px;
     transition: all 0.36s;
     margin-left:18px
