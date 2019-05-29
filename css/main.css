@@ -250,14 +250,14 @@ a.color:active {color: #FFF}  /* 被选择的链接 */
     color: #fff33c;
     font-weight:600;
 }
-    .hot{
+.hot{
     color: #fe6500;
     font-weight:600;
     font-size:18px;
     background:rgba(0,0,0,0.3);
     border-top:1px solid;
     border-bottom:1px solid;
-    line-height:39px;
+    padding-bottom: 16px;
 }
 .buy{
     cursor:pointer;
