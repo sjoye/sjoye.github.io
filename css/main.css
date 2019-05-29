@@ -265,9 +265,8 @@ a.color:active {color: #FFF}  /* 被选择的链接 */
     color: #ffedab;
     border:1px solid;
     padding:2px 6px;
-    border-radius:6px;
+    border-radius:30px;
     transition: all 0.36s;
-    margin-left:18px
 }
     .buy:hover{
     background: #ffedab;
