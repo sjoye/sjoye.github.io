@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<title>Microsoft微软商店</title>
+	<link rel="stylesheet" href="./css/main.css">
+	<style>
+		.card {
+			width: 88vw;
+			margin: 0 auto;
+			border-radius: 20px;
+			font-weight: 600;
+			font-size: 18px;
+			background: rgb(255 255 255 / 0%);
+			border-top: 1px solid;
+			border-bottom: 1px solid;
+			padding-bottom: 16px;
+			backdrop-filter: blur(10px);
+			-webkit-backdrop-filter: blur(10px);
+			box-shadow: inset 2px 2px 6px 2px rgb(255 255 255 / 20%), inset -2px -2px 4px -1px rgb(255 255 255 / 20%);
+		}
+
+		.method-option {
+			display: flex;
+			align-items: center;
+		}
+
+		.method-option input[type="radio"] {
+			margin: 10px;
+			appearance: none;
+			width: 18px;
+			height: 18px;
+			border: 2px solid #ccc;
+			border-radius: 50%;
+			outline: none;
+			cursor: pointer;
+		}
+
+		.method-option input[type="radio"]:checked {
+			border: 2px solid #fff;
+			background: #0099ff;
+		}
+
+		.qr-code-container {
+			/* 初始高度为0 */
+			height: 0;
+			/* 隐藏溢出内容 */
+			overflow: hidden;
+			/* 添加过渡效果 */
+			transition: height 0.5s ease;
+			text-align: center;
+			margin-top: 20px;
+		}
+
+		.qr-code-container.active {
+			height: 300px;
+		}
+
+		.qr-code {
+			width: 200px;
+			height: 300px;
+			margin: 0 auto;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div id="imgbox" class="bgdiv">
+		<img src="./img/1.jpg" />
+		<img src="./img/2.jpg" />
+	</div>
+
+
+	<div class="name">
+		<p>↓Microsoft365 E3 MSDN微软企业版订阅服务↓</p>
+
+		<div class="card">
+			<p onclick="tb()" style="cursor:pointer">Microsoft 365 E3 MSDN</p>
+			<p> <span style="color: #ff6bee;display: block;text-align: center;font-size:12px">
+					💡须知：此产品订阅服务成功续费后将自动延期至【2026年12月31日】
+				</span> </p>
+			<p>选择合适您的支付方式：</p>
+
+			<div class="payment-method">
+
+
+				<label class="method-option">
+					<input type="radio" name="payment" value="bank">
+					
+					<img src="./img/z.png"  width="22px">&nbsp;
+					支付宝（推荐）
+				</label>
+
+				<div class="qr-code-container" id="qrCode2">
+					<div class="qr-code">
+						<img src="./img/zfb.jpg" alt="支付宝支付二维码" width="200px">
+					</div>
+				</div>
+
+				<label class="method-option">
+					<input type="radio" name="payment" value="wechat">
+					<span class="method-icon">💳</span>&nbsp;
+					微信
+				</label>
+
+				<div class="qr-code-container" id="qrCode1">
+					<div class="qr-code">
+						<img src="./img/wx.png" alt="微信支付二维码" width="200px">
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+
+
+	<div class="showtitle" id="show">
+		<i class="ic">&#xe827</i><span style="color: #ff771e">Office</span>
+	</div>
+
+	<div class="progress ro dot">
+		<span></span>
+		<span></span>
+		<span></span>
+		<span></span>
+		<span></span>
+	</div>
+
+	<div class="rofont" onclick="jump()"></div>
+	<!-- <div class="rofont" onclick="jump()">开启<span style="color: #ff771e">365</span></div> -->
+
+	<script src="./js/jquery-1.8.3.min.js"></script>
+	<script>
+		function jump() {
+			window.open("https://www.office.com");
+		}
+
+		$(document).ready(function () {
+			$("#show").animate({ opacity: '1' }, 1999);
+		});
+
+		function tb() {
+			window.open("https://item.taobao.com/item.htm?spm=a230r.1.14.1.3e0f5a10O6xkoD&id=613207744172&ns=1&abbucket=9#detail");
+		}
+
+		function win() {
+			window.open("https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-18533257697.2.1dae6a4fLPsp2X&id=595625188559");
+		}
+
+		$(document).ready(function () {
+			$("#imgbox img").fadeOut(0).eq(0).fadeIn(0);
+			var i = 0;
+			setInterval(function () {
+				if ($("#imgbox img").length > (i + 1)) {
+					$("#imgbox img").eq(i).fadeOut(666).next("img").fadeIn(888);
+					i++;
+				}
+				else {
+					$("#imgbox img").eq(i).fadeOut(666).siblings("img").eq(0).fadeIn(888);
+					i = 0;
+				}
+			}, 8888);
+		});
+
+		document.addEventListener('DOMContentLoaded', function () {
+			const radioButtons = document.querySelectorAll('input[name="payment"]');
+			const qrCode1 = document.getElementById('qrCode1');
+			const qrCode2 = document.getElementById('qrCode2');
+			// 初始状态（微信默认选中时显示二维码）qrCode1.classList.add('active');
+			
+			radioButtons.forEach(radio => {
+				radio.addEventListener('change', function () {
+					if (this.value === 'wechat') {
+						qrCode1.classList.add('active');
+						qrCode2.classList.remove('active');
+					} else {
+						qrCode1.classList.remove('active');
+						qrCode2.classList.add('active');
+					}
+				});
+			});
+		});
+
+	</script>
+</body>
+
+</html>
