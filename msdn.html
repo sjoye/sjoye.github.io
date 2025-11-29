@@ -56,12 +56,12 @@
 		}
 
 		.qr-code-container.active {
-			height: 300px;
+			height: 360px;
 		}
 
 		.qr-code {
 			width: 200px;
-			height: 300px;
+			
 			margin: 0 auto;
 			display: flex;
 			align-items: center;
@@ -74,8 +74,8 @@
 
 	<div id="imgbox" class="bgdiv">
 		<img src="./img/bg.jpg" />
-		<img src="./img/1.jpg" />
-		<img src="./img/2.jpg" />
+		<img data-src="./img/1.jpg" class="lazy" style="display:none;" />
+		<img data-src="./img/2.jpg" class="lazy" style="display:none;" />
 	</div>
 
 
@@ -85,7 +85,8 @@
 		<div class="card">
 			<p onclick="tb()" style="cursor:pointer">Microsoft 365 E3 MSDN</p>
 			<p> <span style="color: #ff6bee;display: block;text-align: center;font-size:12px">
-					💡成功续费后使用有效期将自动延至【2026年12月31日】
+					💡成功续费后使用有效期将自动延至【2026年12月31日】<BR>
+					💡手机端长按保存二维码，到APP点扫码选取图片识别即可
 				</span> </p>
 			<p>选择适合您的支付方式：</p>
 
@@ -144,39 +145,51 @@
 			window.open("https://www.office.com");
 		}
 
-		$(document).ready(function () {
-			$("#show").animate({ opacity: '1' }, 1999);
-		});
-
-		function tb() {
-			window.open("https://item.taobao.com/item.htm?spm=a230r.1.14.1.3e0f5a10O6xkoD&id=613207744172&ns=1&abbucket=9#detail");
-		}
-
-		function win() {
-			window.open("https://item.taobao.com/item.htm?spm=a1z10.1-c.w4004-18533257697.2.1dae6a4fLPsp2X&id=595625188559");
-		}
-
-		$(document).ready(function () {
-			$("#imgbox img").fadeOut(0).eq(0).fadeIn(0);
-			var i = 0;
-			setInterval(function () {
-				if ($("#imgbox img").length > (i + 1)) {
-					$("#imgbox img").eq(i).fadeOut(666).next("img").fadeIn(888);
-					i++;
+		// 懒加载函数
+		function lazyLoadImages() {
+			const lazyImages = document.querySelectorAll('#imgbox img.lazy');
+			lazyImages.forEach(img => {
+				const src = img.getAttribute('data-src');
+				if (src) {
+					img.src = src;
+					img.style.display = 'none'; // 先隐藏，等轮播时再显示
+					img.onload = () => {
+						// 可选：加载完成后做点什么
+					};
 				}
-				else {
-					$("#imgbox img").eq(i).fadeOut(666).siblings("img").eq(0).fadeIn(888);
+			});
+		}
+
+		$(document).ready(function () {
+			// 首屏动画
+			$("#show").animate({ opacity: '1' }, 1999);
+
+			// 背景图轮播初始化（只显示 bg.jpg）
+			$("#imgbox img").fadeOut(0).eq(0).fadeIn(0);
+
+			// 【关键】延迟加载 1.jpg 和 2.jpg在首屏动画结束后加载（推荐）
+			setTimeout(lazyLoadImages, 2000); // 等 show 动画完成后再加载
+
+			// 启动轮播（注意：此时 1.jpg/2.jpg 可能还未加载完，但轮播逻辑会处理）
+			let i = 0;
+			setInterval(function () {
+				const $imgs = $("#imgbox img");
+				if ($imgs.length > (i + 1)) {
+					$imgs.eq(i).fadeOut(666).next("img").fadeIn(888);
+					i++;
+				} else {
+					$imgs.eq(i).fadeOut(666).siblings("img").eq(0).fadeIn(888);
 					i = 0;
 				}
 			}, 8888);
 		});
 
+		// 支付方式切换逻辑（不变）
 		document.addEventListener('DOMContentLoaded', function () {
 			const radioButtons = document.querySelectorAll('input[name="payment"]');
 			const qrCode1 = document.getElementById('qrCode1');
 			const qrCode2 = document.getElementById('qrCode2');
-			// 初始状态（微信默认选中时显示二维码）qrCode1.classList.add('active');
-			
+
 			radioButtons.forEach(radio => {
 				radio.addEventListener('change', function () {
 					if (this.value === 'wechat') {
