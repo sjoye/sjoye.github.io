@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>安全入口</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #eef2f3;
+      margin: 0;
+    }
+
+    .box {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 300px;
+    }
+
+    h3 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 15px 0;
+      box-sizing: border-box;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      text-align: center;
+      text-transform: uppercase;
+      /* 输入时自动大写 */
+      letter-spacing: 2px;
+    }
+
+    input:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="box">
+    <h3>密钥跳转验证</h3>
+    <input type="text" id="keyInput" placeholder="请输入6位密钥" maxlength="6">
+    <button id="btn">解锁跳转</button>
+  </div>
+
+  <script>
+    // 1. 基础 URL
+    const BASE_URL = 'https://sjoye.github.io/';
+    // 2. 正确的“哈希指纹”
+    // 这是密钥经过下方 hashCode 算法计算得出的 16进制结果长度控制在 8 位
+    // 3. 核心算法：将字符串转为 8位以内的 16进制字符串
+    function hashCode(str) {
+      if (!str) return '';
+      let hash = 0;
+      // 强制大写，保证大小写不敏感
+      const string = str.toUpperCase();
+      // 经典的 Times 31 算法 (类似于 Java 的 String.hashCode)
+      for (let i = 0; i < string.length; i++) {
+        const char = string.charCodeAt(i);
+        // ((hash << 5) - hash) 等同于 hash * 31，但位运算更快且更“混淆”
+        hash = ((hash << 5) - hash) + char;
+        // 转换为 32位 整数 (防止溢出)
+        hash = hash | 0;
+      }
+      // (hash >>> 0) 将有符号整数转换为无符号整数.toString(16) 将数字转换为 16 进制字符串
+      return (hash >>> 0).toString(16);
+    }
+
+    // 4. 逻辑处理
+    const btn = document.getElementById('btn');
+    const input = document.getElementById('keyInput');
+
+    function checkAndRedirect() {
+      var truthBeTold = window.confirm("温馨提示：密钥核对无误请点击确认，有误将跳转异常");
+      if (truthBeTold) {
+        const val = input.value.trim();
+        const computedHash = hashCode(val);
+        const finalUrl = BASE_URL + computedHash + '.html';
+        window.location.href = finalUrl;
+      } else {
+        window.alert("操作已取消。");
+        return; // 用户取消，停止执行
+      }
+
+    }
+
+    btn.addEventListener('click', checkAndRedirect);
+
+    // 回车键支持
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') checkAndRedirect();
+    });
+
+  </script>
+</body>
+
+</html>
