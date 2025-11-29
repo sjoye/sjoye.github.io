@@ -85,18 +85,12 @@
     </style>
 </head>
 
-<body>
+<body style="background-image: url(./img/bird.png);background-size: cover;">
 
-    <div id="imgbox" class="bgdiv">
-        <img src="./img/bird.png" />
-    </div>
-
-
-    <div class="name">
+    <div class="name" style="margin: 0;">
 
 
         <h2 style="color: #ff771e;font-weight: 600;">🦜鸟宝寄养服务驿站</h2>
-
 
 
         <div class="card">
@@ -110,48 +104,48 @@
 
             <p onclick="tb()" style="cursor:pointer">定制您的寄养计划</p>
 
-<section style="padding: 0 16px;">
-    <p><strong>寄养品种（可多选）：</strong></p>
+            <section style="padding: 0 16px;">
+                <p><strong>寄养品种（可多选）：</strong></p>
 
-    <div class="bird-option">
-        <label>
-            <input type="checkbox" name="birdType" value="5" data-name="虎皮" checked>
-            虎皮 (5元/天) 数量：
-        </label>
-        <input type="number" class="quantity-input" value="1" min="1" max="100">
-    </div>
+                <div class="bird-option">
+                    <label>
+                        <input type="checkbox" name="birdType" value="5" data-name="虎皮" checked>
+                        虎皮 (5元/天) 数量：
+                    </label>
+                    <input type="number" class="quantity-input" value="1" min="1" max="100">
+                </div>
 
-    <div class="bird-option">
-        <label>
-            <input type="checkbox" name="birdType" value="6" data-name="牡丹">
-            牡丹 (6元/天) 数量：
-        </label>
-        <input type="number" class="quantity-input" value="1" min="1" max="100" disabled>
-    </div>
+                <div class="bird-option">
+                    <label>
+                        <input type="checkbox" name="birdType" value="6" data-name="牡丹">
+                        牡丹 (6元/天) 数量：
+                    </label>
+                    <input type="number" class="quantity-input" value="1" min="1" max="100" disabled>
+                </div>
 
-    <div class="bird-option">
-        <label>
-            <input type="checkbox" name="birdType" value="7" data-name="玄凤">
-            玄凤 (7元/天) 数量：
-        </label>
-        <input type="number" class="quantity-input" value="1" min="1" max="100" disabled>
-    </div>
+                <div class="bird-option">
+                    <label>
+                        <input type="checkbox" name="birdType" value="7" data-name="玄凤">
+                        玄凤 (7元/天) 数量：
+                    </label>
+                    <input type="number" class="quantity-input" value="1" min="1" max="100" disabled>
+                </div>
 
-    <div class="bird-option">
-        <label>
-            <input type="checkbox" name="birdType" value="8" data-name="和尚">
-            和尚 (8元/天) 数量：
-        </label>
-        <input type="number" class="quantity-input" value="1" min="1" max="100" disabled>
-    </div>
+                <div class="bird-option">
+                    <label>
+                        <input type="checkbox" name="birdType" value="8" data-name="和尚">
+                        和尚 (8元/天) 数量：
+                    </label>
+                    <input type="number" class="quantity-input" value="1" min="1" max="100" disabled>
+                </div>
 
-    <p style="margin-top: 16px;"><strong>寄养起止时间：</strong><br>
-        <input type="date" id="startDate" style="width: 102px;"> — 
-        <input type="date" id="endDate" style="width: 102px;">
-    </p>
+                <p style="margin-top: 16px;"><strong>寄养起止时间：</strong><br>
+                    <input type="date" id="startDate" style="width: 102px;"> —
+                    <input type="date" id="endDate" style="width: 102px;">
+                </p>
 
-    <p style="margin-top: 16px;color: #ffbb00;"><strong>总价：¥<span id="totalCost">0.00</span></strong></p>
-</section>
+                <p style="margin-top: 16px;color: #ffbb00;"><strong>总价：¥<span id="totalCost">0.00</span></strong></p>
+            </section>
 
             <p>选择您适合的支付方式：</p>
 
@@ -189,147 +183,147 @@
     </div>
 
 
-   <script>
-    // 工具函数：格式化日期为 YYYY-MM-DD
-    function formatDate(date) {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d}`;
-    }
-
-    // 初始化日期限制
-    function initDateInputs() {
-        const today = new Date();
-        const maxDate = new Date();
-        maxDate.setDate(today.getDate() + 89); // 最多90天（含当天），所以+89
-
-        const startDateInput = document.getElementById('startDate');
-        const endDateInput = document.getElementById('endDate');
-
-        const todayStr = formatDate(today);
-        const maxStr = formatDate(maxDate);
-
-        startDateInput.min = todayStr;
-        startDateInput.value = todayStr; // 默认选今天
-
-        endDateInput.min = todayStr;
-        endDateInput.max = maxStr;
-
-        // 当 startDate 改变时，动态更新 endDate 的 min 和 max
-        startDateInput.addEventListener('change', () => {
-            const selectedStart = new Date(startDateInput.value);
-            const newMin = new Date(selectedStart);
-            const newMax = new Date(selectedStart);
-            newMax.setDate(newMin.getDate() + 89); // 最多再加89天 → 总共90天
-
-            endDateInput.min = formatDate(newMin);
-            endDateInput.max = formatDate(newMax);
-
-            // 如果当前 endDate 超出新范围，自动修正
-            const currentEnd = new Date(endDateInput.value);
-            if (endDateInput.value && (currentEnd < newMin || currentEnd > newMax)) {
-                endDateInput.value = formatDate(newMin); // 重置为 startDate
-            }
-
-            calculateTotal();
-        });
-
-        endDateInput.addEventListener('change', calculateTotal);
-    }
-
-    // 计算总价（含折扣）
-    function calculateTotal() {
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-
-        if (!startDate || !endDate) {
-            document.getElementById('totalCost').innerText = '0.00';
-            return;
+    <script>
+        // 工具函数：格式化日期为 YYYY-MM-DD
+        function formatDate(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
         }
 
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        // 初始化日期限制
+        function initDateInputs() {
+            const today = new Date();
+            const maxDate = new Date();
+            maxDate.setDate(today.getDate() + 89); // 最多90天（含当天），所以+89
 
-        if (end < start) {
-            document.getElementById('totalCost').innerText = '0.00';
-            return;
-        }
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
 
-        const days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
-        if (days > 90) {
-            // 理论上不会触发（因 input 限制），但双重保险
-            document.getElementById('totalCost').innerText = '0.00';
-            return;
-        }
+            const todayStr = formatDate(today);
+            const maxStr = formatDate(maxDate);
 
-        let rawTotal = 0;
-        const checkboxes = document.querySelectorAll('input[name="birdType"]');
-        checkboxes.forEach(checkbox => {
-            if (checkbox.checked) {
-                const pricePerDay = parseFloat(checkbox.value);
-                const quantityInput = checkbox.closest('.bird-option').querySelector('.quantity-input');
-                const quantity = parseInt(quantityInput.value) || 0;
-                if (quantity > 0) {
-                    rawTotal += pricePerDay * quantity * days;
+            startDateInput.min = todayStr;
+            startDateInput.value = todayStr; // 默认选今天
+
+            endDateInput.min = todayStr;
+            endDateInput.max = maxStr;
+
+            // 当 startDate 改变时，动态更新 endDate 的 min 和 max
+            startDateInput.addEventListener('change', () => {
+                const selectedStart = new Date(startDateInput.value);
+                const newMin = new Date(selectedStart);
+                const newMax = new Date(selectedStart);
+                newMax.setDate(newMin.getDate() + 89); // 最多再加89天 → 总共90天
+
+                endDateInput.min = formatDate(newMin);
+                endDateInput.max = formatDate(newMax);
+
+                // 如果当前 endDate 超出新范围，自动修正
+                const currentEnd = new Date(endDateInput.value);
+                if (endDateInput.value && (currentEnd < newMin || currentEnd > newMax)) {
+                    endDateInput.value = formatDate(newMin); // 重置为 startDate
                 }
-            }
-        });
 
-        // 应用折扣
-        let finalTotal = rawTotal;
-        if (rawTotal >= 50) {
-            finalTotal = rawTotal * 0.8;
-        } else if (rawTotal > 30) {
-            finalTotal = rawTotal * 0.9;
-        }
-
-        document.getElementById('totalCost').innerText = finalTotal.toFixed(2);
-    }
-
-    // 页面加载完成后初始化
-    document.addEventListener('DOMContentLoaded', () => {
-        // 初始化日期
-        initDateInputs();
-
-        const checkboxes = document.querySelectorAll('input[name="birdType"]');
-        const quantityInputs = document.querySelectorAll('.quantity-input');
-
-        // 品种勾选控制数量输入框启用/禁用
-        checkboxes.forEach((checkbox, index) => {
-            checkbox.addEventListener('change', function () {
-                quantityInputs[index].disabled = !this.checked;
                 calculateTotal();
             });
-        });
 
-        // 数量变化
-        quantityInputs.forEach(input => {
-            input.addEventListener('change', calculateTotal);
-        });
+            endDateInput.addEventListener('change', calculateTotal);
+        }
 
-        // 支付方式切换（保留原逻辑）
-        const radioButtons = document.querySelectorAll('input[name="payment"]');
-        const qrCode1 = document.getElementById('qrCode1');
-        const qrCode2 = document.getElementById('qrCode2');
-        radioButtons.forEach(radio => {
-            radio.addEventListener('change', function () {
-                if (this.value === 'wechat') {
-                    qrCode1.classList.add('active');
-                    qrCode2.classList.remove('active');
-                } else {
-                    qrCode1.classList.remove('active');
-                    qrCode2.classList.add('active');
+        // 计算总价（含折扣）
+        function calculateTotal() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                document.getElementById('totalCost').innerText = '0.00';
+                return;
+            }
+
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            if (end < start) {
+                document.getElementById('totalCost').innerText = '0.00';
+                return;
+            }
+
+            const days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+            if (days > 90) {
+                // 理论上不会触发（因 input 限制），但双重保险
+                document.getElementById('totalCost').innerText = '0.00';
+                return;
+            }
+
+            let rawTotal = 0;
+            const checkboxes = document.querySelectorAll('input[name="birdType"]');
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    const pricePerDay = parseFloat(checkbox.value);
+                    const quantityInput = checkbox.closest('.bird-option').querySelector('.quantity-input');
+                    const quantity = parseInt(quantityInput.value) || 0;
+                    if (quantity > 0) {
+                        rawTotal += pricePerDay * quantity * days;
+                    }
                 }
             });
-        });
-    });
 
-    // 其他函数（如 jump）保留
-    function jump() {
-        window.open("https://www.office.com");
-    }
-</script>
+            // 应用折扣
+            let finalTotal = rawTotal;
+            if (rawTotal >= 50) {
+                finalTotal = rawTotal * 0.8;
+            } else if (rawTotal > 30) {
+                finalTotal = rawTotal * 0.9;
+            }
+
+            document.getElementById('totalCost').innerText = finalTotal.toFixed(2);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化日期
+            initDateInputs();
+
+            const checkboxes = document.querySelectorAll('input[name="birdType"]');
+            const quantityInputs = document.querySelectorAll('.quantity-input');
+
+            // 品种勾选控制数量输入框启用/禁用
+            checkboxes.forEach((checkbox, index) => {
+                checkbox.addEventListener('change', function () {
+                    quantityInputs[index].disabled = !this.checked;
+                    calculateTotal();
+                });
+            });
+
+            // 数量变化
+            quantityInputs.forEach(input => {
+                input.addEventListener('change', calculateTotal);
+            });
+
+            // 支付方式切换（保留原逻辑）
+            const radioButtons = document.querySelectorAll('input[name="payment"]');
+            const qrCode1 = document.getElementById('qrCode1');
+            const qrCode2 = document.getElementById('qrCode2');
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', function () {
+                    if (this.value === 'wechat') {
+                        qrCode1.classList.add('active');
+                        qrCode2.classList.remove('active');
+                    } else {
+                        qrCode1.classList.remove('active');
+                        qrCode2.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // 其他函数（如 jump）保留
+        function jump() {
+            window.open("https://www.office.com");
+        }
+    </script>
 </body>
 
 </html>
