@@ -101,14 +101,14 @@
 
         <div class="card">
 
-            <p> <span style="color: #ff6bee;display: block;text-align: center;font-size:12px">
-                    ⭐可寄养品种：虎皮/牡丹/玄凤/和尚（可完全隔离，不混养）<BR>
-                    ⭐寄养总价越大越优惠，超¥30可享优惠，超¥50享最大优惠。<BR>
-                    ⭐超大海景房360°景观，宝贝住得舒心，提供每日换水换粮等服务。<BR>
-                    ⭐支持24小时全天直播，让你出差在外随时随地查看鸟宝情况。
+            <p> <span style="color: #ffc812;display: block;text-align: center;font-size:12px">
+                    ⭐可寄养的品种：虎皮/牡丹/玄凤/和尚（可完全隔离，不混养）<BR>
+                    ⭐寄养总价超¥30可享九折优惠，总价越高折扣越大（节日除外）<BR>
+                    ⭐超大海景房360°景观，宝贝住得舒心，提供每日换水换粮等服务<BR>
+                    ⭐支持24小时全天直播，让你出差在外也可随时随地查看鸟宝情况
                 </span> </p>
 
-            <p onclick="tb()" style="cursor:pointer">定制您的寄养计划：</p>
+            <p onclick="tb()" style="cursor:pointer">定制您的寄养计划</p>
 
 <section style="padding: 0 16px;">
     <p><strong>寄养品种（可多选）：</strong></p>
@@ -145,7 +145,7 @@
         <input type="number" class="quantity-input" value="1" min="1" max="100" disabled>
     </div>
 
-    <p style="margin-top: 16px;"><strong>寄养时段：</strong><br>
+    <p style="margin-top: 16px;"><strong>寄养起止时间：</strong><br>
         <input type="date" id="startDate" style="width: 102px;"> — 
         <input type="date" id="endDate" style="width: 102px;">
     </p>
@@ -280,7 +280,7 @@
         let finalTotal = rawTotal;
         if (rawTotal >= 50) {
             finalTotal = rawTotal * 0.8;
-        } else if (rawTotal >= 30) {
+        } else if (rawTotal > 30) {
             finalTotal = rawTotal * 0.9;
         }
 
