@@ -96,11 +96,11 @@
         <div class="card">
 
             <p style="color: #ffc812;display: block;text-align: center;font-size:12px">
-                    ⭐支持寄养下列品种（雏鸟、半毛除外），可完全隔离，不混养<BR>
-                    ⭐360°超大观景房宝贝住得舒心，提供每日换水换粮等服务<BR>
-                    ⭐支持24小时全天直播，让你出差也可随时随地查看鸟宝情况<BR>
-                    ⭐市内可专车接送更省心，单次费用¥28~¥66（视距离而定）<BR>
-                    ⭐寄养总价超¥30享九折优惠，总价越高折扣越大（节日除外）<BR>
+                ⭐支持寄养下列品种（雏鸟、半毛除外），可完全隔离，不混养<BR>
+                ⭐360°超大观景房宝贝住得舒心，提供每日换水换粮等服务<BR>
+                ⭐支持24小时直播，让你出差也可随时随地查看鸟宝和远程互动<BR>
+                ⭐需寄养其他类型可私聊（金太阳、金刚不予接收），需自带粮<BR>
+                ⭐寄养总价超¥30享95折优惠，总价越高折扣越大（节假日原价）<BR>
             </p>
 
             <p onclick="tb()" style="cursor:pointer">定制您的寄养计划</p>
@@ -110,32 +110,32 @@
 
                 <div class="bird-option">
                     <label>
-                        <input type="checkbox" name="birdType" value="5" data-name="虎皮" checked>
-                        虎皮 (5元/天) 数量：
+                        <input type="checkbox" name="birdType" value="6.6" data-name="虎皮" checked>
+                        虎皮 | 牡丹 (¥6.6/天) 数量
                     </label>
                     <input type="number" class="quantity-input" value="1" min="1" max="100">
                 </div>
 
                 <div class="bird-option">
                     <label>
-                        <input type="checkbox" name="birdType" value="6" data-name="牡丹">
-                        牡丹 (6元/天) 数量：
+                        <input type="checkbox" name="birdType" value="7.7" data-name="玄凤">
+                        玄凤 | 太平洋 (¥7.7/天) 数量
                     </label>
                     <input type="number" class="quantity-input" value="1" min="1" max="100" disabled>
                 </div>
 
                 <div class="bird-option">
                     <label>
-                        <input type="checkbox" name="birdType" value="7" data-name="玄凤">
-                        玄凤 (7元/天) 数量：
+                        <input type="checkbox" name="birdType" value="8.8" data-name="和尚">
+                        和尚 | 小太阳 (¥8.8/天) 数量
                     </label>
                     <input type="number" class="quantity-input" value="1" min="1" max="100" disabled>
                 </div>
 
                 <div class="bird-option">
                     <label>
-                        <input type="checkbox" name="birdType" value="8" data-name="和尚">
-                        和尚 (8元/天) 数量：
+                        <input type="checkbox" name="birdType" value="12.8" data-name="其他">
+                        其他品种 (¥12.8/天) 数量
                     </label>
                     <input type="number" class="quantity-input" value="1" min="1" max="100" disabled>
                 </div>
@@ -274,9 +274,9 @@
             // 应用折扣
             let finalTotal = rawTotal;
             if (rawTotal >= 50) {
-                finalTotal = rawTotal * 0.8;
+                finalTotal = rawTotal * 0.85;
             } else if (rawTotal > 30) {
-                finalTotal = rawTotal * 0.9;
+                finalTotal = rawTotal * 0.95;
             }
 
             document.getElementById('totalCost').innerText = finalTotal.toFixed(2);
