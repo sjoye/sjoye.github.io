@@ -82,7 +82,7 @@
         .progress.ro.dot {
             left: 47.6vw;
         }
-        
+
         /* 背景容器样式 */
         .background-container {
             position: fixed;
@@ -90,10 +90,11 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #000; /* 初始纯黑色背景 */
+            background-color: #000;
+            /* 初始纯黑色背景 */
             z-index: -1;
         }
-        
+
         .background-image {
             position: absolute;
             top: 0;
@@ -105,11 +106,89 @@
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
         }
-        
+
         .background-image.loaded {
             opacity: 1;
         }
+
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border-radius: 15px;
+            padding: 25px;
+            width: 85vw;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .close-btn {
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            background: none;
+            border: none;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .modal-body ul {
+            padding-left: 20px;
+        }
+
+        .modal-body li {
+            margin: 8px 0;
+        }
+
+        .modal-body h3 {
+            margin: 15px 0 10px 0;
+            font-size: 16px;
+            color: #333;
+        }
     </style>
+
 </head>
 
 <body>
@@ -131,7 +210,8 @@
                 ⭐360°超大观景房宝贝住得舒心，提供每日换水换粮等服务<BR>
                 ⭐支持24小时直播，让你出差也可随时随地查看鸟宝和远程互动<BR>
                 ⭐需寄养其他类型可私聊（金太阳、金刚不予接收），需自带粮<BR>
-                ⭐寄养总价超¥30享95折优惠，总价越高折扣越大（节假日原价）<BR>
+                ⭐寄养总价¥30享95折优惠，总价越高折扣越大（节假日原价）<BR>
+                <span id="notice" style="color: #ccc;">寄养前请阅读《寄养声明》，确认寄养则视为已同意此条款</span><BR>
             </p>
 
             <p onclick="tb()" style="cursor:pointer">定制您的寄养计划</p>
@@ -214,6 +294,60 @@
 
     </div>
 
+    <!-- 弹窗 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">寄养免责声明</div>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>甲方：寄养人</p>     
+                <p>乙方：收养人</p>            
+                <ul>
+                    <li>因宠物自身原因造成的伤害或死亡，乙方不承担相关责任
+                        <ul>
+                            <li>包括但不限于：宠物先天性疾病、遗传缺陷；</li>
+                            <li>既往存在的基础疾病（如心脏、呼吸系统疾病、免疫缺陷等）；以及体弱多病、抵抗力低下导致的突发状况；</li>
+                            <li>自残行为、啄羽、撞笼等非人为因素引起的伤亡。</li>
+                        </ul>
+                    </li>
+                    <li>乙方仅提供日常照料服务（换饮用水和添加粮食），不承担其他医疗责任，乙方不对宠物患病、突发疾病、意外死亡承担责任；
+                        <ul>
+                            <li>若宠物在寄养期间出现健康问题，乙方有义务及时通知甲方，因甲方未及时响应造成的问题，乙方不承担责任。若乙方已通知宠物异常情况，但甲方未在8小时内作出处理决定或安排送医或接回，由此产生的后果由甲方自行承担；
+                            </li>
+                            <li>乙方有权在极端情况下（如宠物濒危且无法联系甲方）可采取临时抢救应急措施，但不承担最终意外责任。</li>
+                            <li>乙方提供的监控仅供甲方查看，不得用于商业用途或其他非法目的。</li>
+                        </ul>
+                    </li>
+                    <li>不可抗力免责
+                        <ul>
+                            <li>因自然灾害、公共卫生事件、政府管制等不可抗力导致的服务中断或宠物损失，双方互不追责。</li>
+                        </ul>
+                    </li>
+                </ul>
+
+
+                <h3>协议生效与终止</h3>
+                <ul>
+                    <li>本协议自双方服务发生之日起生效。</li>
+                    <li>甲方提前结束寄养的，需提前72小时通知乙方，可协商比例退还费用。</li>
+                    <li>乙方有权在以下情形下终止服务：宠物出现严重传染性疾病；
+                        <ul>
+                            <li>甲方长期失联或拒绝配合处理；</li>
+                            <li>其他危及他人或公共安全的情况。</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h3>其他约定</h3>
+                <ul>
+                    <li>因本协议引起的争议，双方应友好协商解决</li>
+                    <li>甲方接受服务表明确认已阅读并理解本协议全部内容，并自愿接受其约束。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 
     <script>
         // 工具函数：格式化日期为 YYYY-MM-DD
@@ -349,35 +483,57 @@
                     }
                 });
             });
-            
+
             // 实现背景图片懒加载
             loadBackgroundImage();
+
+            // 添加弹窗功能
+            const noticeElement = document.getElementById('notice');
+            const modalOverlay = document.getElementById('modalOverlay');
+            const closeModalBtn = document.getElementById('closeModal');
+
+            // 显示弹窗
+            noticeElement.addEventListener('click', function () {
+                modalOverlay.style.display = 'block';
+            });
+
+            // 关闭弹窗
+            closeModalBtn.addEventListener('click', function () {
+                modalOverlay.style.display = 'none';
+            });
+
+            // 点击遮罩层关闭弹窗
+            modalOverlay.addEventListener('click', function (e) {
+                if (e.target === modalOverlay) {
+                    modalOverlay.style.display = 'none';
+                }
+            });
         });
 
         // 其他函数（如 jump）保留
         function jump() {
             window.open("https://www.office.com");
         }
-        
+
         // 实现背景图片懒加载
         function loadBackgroundImage() {
             const backgroundImage = document.getElementById('backgroundImage');
-            
+
             // 创建一个临时图片对象来加载背景图片
             const img = new Image();
             img.src = './img/bird.png';
-            
+
             // 图片加载完成后的回调
-            img.onload = function() {
+            img.onload = function () {
                 // 设置背景图片
                 backgroundImage.style.backgroundImage = `url(${img.src})`;
-                
+
                 // 添加loaded类，触发动画效果
                 backgroundImage.classList.add('loaded');
             };
-            
+
             // 图片加载失败的处理
-            img.onerror = function() {
+            img.onerror = function () {
                 console.error('背景图片加载失败');
                 // 可以在这里添加错误处理逻辑，比如使用默认图片
             };
@@ -386,6 +542,3 @@
 </body>
 
 </html>
-
-
-
