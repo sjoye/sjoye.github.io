@@ -370,7 +370,7 @@
             const todayStr = formatDate(today);
             const maxStr = formatDate(maxDate);
 
-            startDateInput.min = todayStr;
+            // startDateInput.min = todayStr;
             startDateInput.value = todayStr; // 默认选今天
 
             endDateInput.min = todayStr;
@@ -404,7 +404,7 @@
             const endDate = document.getElementById('endDate').value;
 
             if (!startDate || !endDate) {
-                document.getElementById('totalCost').innerText = '0.00';
+                document.getElementById('totalCost').innerText = '0.0';
                 return;
             }
 
@@ -412,14 +412,14 @@
             const end = new Date(endDate);
 
             if (end < start) {
-                document.getElementById('totalCost').innerText = '0.00';
+                document.getElementById('totalCost').innerText = '0.0';
                 return;
             }
 
             const days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
             if (days > 90) {
                 // 理论上不会触发（因 input 限制），但双重保险
-                document.getElementById('totalCost').innerText = '0.00';
+                document.getElementById('totalCost').innerText = '0.0';
                 return;
             }
 
@@ -444,7 +444,7 @@
                 finalTotal = rawTotal * 0.95;
             }
 
-            document.getElementById('totalCost').innerText = finalTotal.toFixed(2);
+            document.getElementById('totalCost').innerText = finalTotal.toFixed(1) + ' 🧧已优惠¥' + (rawTotal - finalTotal).toFixed(1);
         }
 
         // 页面加载完成后初始化
