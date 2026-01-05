@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>🦜Qfly Bird Boarding Station</title>
+  <link rel="stylesheet" href="./css/main.css">
+  <style>
+    .showtitle {
+      width: 100%;
+      margin: 0 auto;
+      text-align: center;
+      font-size: 29px;
+      opacity: 0;
+      font-family: "微软雅黑 Light";
+      letter-spacing: 3px;
+      vertical-align: middle;
+    }
+
+    .card {
+      width: 88vw;
+      margin: 0 auto;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 18px;
+      background: rgb(255 255 255 / 0%);
+      border-top: 1px solid;
+      border-bottom: 1px solid;
+      padding-bottom: 16px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: inset 2px 2px 6px 2px rgb(255 255 255 / 20%), inset -2px -2px 4px -1px rgb(255 255 255 / 20%);
+    }
+
+    .method-option {
+      display: flex;
+      align-items: center;
+    }
+
+    .method-option input[type="radio"] {
+      margin: 10px;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #ccc;
+      border-radius: 50%;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .method-option input[type="radio"]:checked {
+      border: 2px solid #fff;
+      background: #0099ff;
+    }
+
+    .qr-code-container {
+      height: 0;
+      overflow: hidden;
+      transition: height 0.5s ease;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .qr-code-container.active {
+      height: 360px;
+    }
+
+    .qr-code {
+      width: 200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .progress.ro.dot {
+      left: 47.6vw;
+    }
+
+    .background-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #000;
+      z-index: -1;
+    }
+
+    .background-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    .background-image.loaded {
+      opacity: 1;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      border-radius: 15px;
+      padding: 25px;
+      width: 85vw;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .close-btn {
+      font-size: 24px;
+      cursor: pointer;
+      color: #999;
+      background: none;
+      border: none;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-btn:hover {
+      color: #333;
+    }
+
+    .modal-body {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #555;
+    }
+
+    .modal-body ul {
+      padding-left: 20px;
+    }
+
+    .modal-body li {
+      margin: 8px 0;
+    }
+
+    .modal-body h3 {
+      margin: 15px 0 10px 0;
+      font-size: 16px;
+      color: #333;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 语言切换按钮 -->
+  <div style="position: fixed; top: 10px; right: 10px; z-index: 999;">
+    <button id="langToggle" style="
+        background: rgba(255,255,255,0.2);
+        border: 1px solid white;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        cursor: pointer;
+        backdrop-filter: blur(5px);
+    ">EN</button>
+  </div>
+
+  <!-- 背景容器 -->
+  <div class="background-container" id="backgroundContainer">
+    <div class="background-image" id="backgroundImage"></div>
+  </div>
+
+  <div class="name" style="margin: 0;">
+    <h2 style="color: #ff771e;font-weight: 600;" data-i18n="title">🦜Qfly鸟宝驿站</h2>
+
+    <div class="card">
+      <p style="color: #ffc812;display: block;text-align: center;font-size:12px">
+        <span data-i18n="supportLine1">⭐支持寄养下列品种（雏鸟、半毛除外），可完全隔离，不混养</span><br>
+        <span data-i18n="supportLine2">⭐360°超大观景房宝贝住得舒心，提供每日换水换粮等服务</span><br>
+        <span data-i18n="supportLine3">⭐支持全天直播，让你出差也可随时随地查看鸟宝和远程互动</span><br>
+        <span data-i18n="supportLine4">⭐需寄养其他类型可私聊（自备专用粮，金太阳/金刚不予接收）</span><br>
+        <span data-i18n="supportLine5">⭐寄养总价享95折优惠，总价越高折扣优惠越大（节假日原价）</span><br>
+        <span id="notice" style="color: #e9e9e9;" data-i18n="notice">寄养前请阅读《寄养服务声明》，确认寄养视为已同意此条款</span><br>
+      </p>
+
+      <p onclick="tb()" style="cursor:pointer" data-i18n="planBtn">定制您的寄养计划</p>
+
+      <section style="padding: 0 16px;">
+        <p><strong data-i18n="birdTypesLabel">寄养品种（可多选）：</strong></p>
+
+        <div class="bird-option">
+          <label>
+            <input type="checkbox" name="birdType" value="6.6" data-name="虎皮" checked>
+            虎皮 | 牡丹 (¥6.6/天) 数量
+          </label>
+          <input type="number" class="quantity-input" value="1" min="1" max="100">
+        </div>
+
+        <div class="bird-option">
+          <label>
+            <input type="checkbox" name="birdType" value="8.8" data-name="玄凤">
+            玄凤 | 太平洋 (¥8.8/天) 数量
+          </label>
+          <input type="number" class="quantity-input" value="1" min="1" max="100" disabled>
+        </div>
+
+        <div class="bird-option">
+          <label>
+            <input type="checkbox" name="birdType" value="9.9" data-name="和尚">
+            和尚 | 小太阳 (¥9.9/天) 数量
+          </label>
+          <input type="number" class="quantity-input" value="1" min="1" max="100" disabled>
+        </div>
+
+        <div class="bird-option">
+          <label>
+            <input type="checkbox" name="birdType" value="16" data-name="其他">
+            其他私聊 (¥12~20/天) 数量
+          </label>
+          <input type="number" class="quantity-input" value="1" min="1" max="100" disabled>
+        </div>
+
+        <p style="margin-top: 16px;"><strong data-i18n="dateLabel">🕓寄养起止日期（最低5日）：</strong><br>
+          <input type="date" id="startDate" style="width: 102px;"> —
+          <input type="date" id="endDate" style="width: 102px;">
+        </p>
+
+        <p style="margin-top: 16px;"><strong data-i18n="extraServiceLabel">💗额外寄养服务：</strong><br>
+          <div class="bird-option"><label>
+              <input type="checkbox" name="birdType" value="1.88" data-name="">
+              <span data-i18n="liveStream">全天24小时直播（¥1.88/天）</span><br>
+              <span data-i18n="heating">热风恒温保暖（独立计费¥2/半天）</span>
+            </label></div>
+        </p>
+
+        <p style="margin-top: 16px;color: #ffbb00;">
+          <strong>
+            <span data-i18n="totalLabel">总价：¥</span>
+            <span id="totalCost">0.00</span>
+          </strong>
+        </p>
+      </section>
+
+      <p data-i18n="paymentLabel">选择您适合的支付方式：</p>
+
+      <div class="payment-method">
+        <label class="method-option">
+          <input type="radio" name="payment" value="bank">
+          <img src="./img/z.png" width="22px">&nbsp;
+          <span data-i18n="alipay">支付宝（推荐）</span>
+        </label>
+
+        <div class="qr-code-container" id="qrCode2">
+          <div class="qr-code">
+            <img src="./img/alipay.png" alt="支付宝支付二维码" width="222px">
+          </div>
+        </div>
+
+        <label class="method-option">
+          <input type="radio" name="payment" value="wechat">
+          <span class="method-icon">✅</span>&nbsp;
+          <span data-i18n="wechat">微信</span>
+        </label>
+
+        <div class="qr-code-container" id="qrCode1">
+          <div class="qr-code">
+            <img src="./img/wx.png" alt="微信支付二维码" width="222px">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹窗 -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" data-i18n="modalTitle">寄养服务声明</div>
+        <button class="close-btn" id="closeModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p><b>甲方：寄养人</b></p>
+        <p><b>乙方：收养人</b></p>
+        <ul>
+          <li>宠物当前存在以下情况的，原则上不予寄养，包括但不限于：
+            <ul>
+              <li>宠物当前处于非健康状态（如感冒、发烧、肠胃病等）。</li>
+              <li>宠物既往存在的先天性疾病、遗传缺陷、基础疾病（如心脏、呼吸系统疾病、免疫缺陷等）；以及体弱多病、抵抗力低下导致的状况。</li>
+              <li>如有以上情况甲方应事先如实告知，乙方视情况决定是否收养，如未事先告知视为无上述情形。</li>
+            </ul>
+          </li>
+          <li>宠物因自身原因造成的伤害或死亡，乙方不承担相关责任
+            <ul>
+              <li>包括但不限于：宠物自残行为如啄羽、撞笼等非人为因素引起的伤亡。</li>
+            </ul>
+          </li>
+          <li>乙方仅提供日常照料服务（换饮用水和添加粮食，手养鸟陪玩），不承担其他医疗责任，乙方不对宠物患病导致的意外情况承担责任；
+            <ul>
+              <li>若宠物在寄养期间出现健康问题，乙方有义务及时通知甲方，因甲方未及时响应造成的问题，乙方不承担责任。若乙方已通知宠物异常情况，但甲方未在8小时内作出处理决定或安排送医或接回，由此产生的后果由甲方自行承担；</li>
+              <li>宠物出现健康问题时，乙方可在甲方授权下协助将宠物送医（当次陪护费50-100视情况而定），期间产生的交通、医疗等相关费用由甲方承担。</li>
+              乙方有权在极端情况下（如宠物濒危且无法联系到甲方时）可采取临时抢救应急措施，但不承担最终意外责任。
+          </li>
+          <li>乙方的远程监控仅供甲方查看，不得用于商业用途或其他非法目的。</li>
+        </ul>
+        </li>
+        <li>不可抗力免责
+          <ul>
+            <li>因自然灾害、公共卫生事件、政府管制等不可抗力因素导致的服务中断或宠物损失，双方互不追责。</li>
+          </ul>
+        </li>
+        </ul>
+
+        <h3>协议生效与终止</h3>
+        <ul>
+          <li>本协议自双方服务发生之日起生效，自服务结束之日终止。</li>
+          <li>甲方提前结束寄养的，需提前72小时通知乙方，可协商比例退还费用。</li>
+          <li>乙方有权在以下情形下终止服务：
+            <ul>
+              <li>宠物出现严重疾病；</li>
+              <li>甲方长期失联或拒绝配合处理；</li>
+              <li>其他危及他人或公共安全的情况。</li>
+            </ul>
+          </li>
+        </ul>
+
+        <h3>其他约定</h3>
+        <ul>
+          <li>因本协议引起的争议，双方应友好协商解决。</li>
+          <li>甲方接受服务表明确认已阅读并理解本协议全部内容，并自愿接受其约束。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== 多语言配置 =====
+    const translations = {
+      zh: {
+        title: "🦜Qfly鸟宝驿站",
+        notice: "寄养前请阅读《寄养服务声明》，确认寄养视为已同意此条款",
+        supportLine1: "⭐支持寄养下列品种（雏鸟、半毛除外），可完全隔离，不混养",
+        supportLine2: "⭐360°超大观景房宝贝住得舒心，提供每日换水换粮等服务",
+        supportLine3: "⭐支持全天直播，让你出差也可随时随地查看鸟宝和远程互动",
+        supportLine4: "⭐需寄养其他类型可私聊（自备专用粮，金太阳/金刚不予接收）",
+        supportLine5: "⭐寄养总价享95折优惠，总价越高折扣优惠越大（节假日原价）",
+        planBtn: "定制您的寄养计划",
+        birdTypesLabel: "寄养品种（可多选）：",
+        dateLabel: "🕓寄养起止日期（最低5日）：",
+        extraServiceLabel: "💗额外寄养服务：",
+        liveStream: "全天24小时直播（¥1.88/天）",
+        heating: "热风恒温保暖（独立计费¥2/半天）",
+        totalLabel: "总价：¥",
+        paymentLabel: "选择您适合的支付方式：",
+        alipay: "支付宝（推荐）",
+        wechat: "微信",
+        modalTitle: "寄养服务声明"
+      },
+      en: {
+        title: "🦜Qfly Bird Boarding Station",
+        notice: "Please read the 'Boarding Service Agreement' before proceeding. Confirmation implies acceptance.",
+        supportLine1: "⭐ We accept the following species (no chicks or partially feathered birds). Full isolation, no cohabitation.",
+        supportLine2: "⭐ Spacious 360° view rooms for your bird's comfort, with daily water & food refresh.",
+        supportLine3: "⭐ 24/7 live streaming so you can check on your bird anytime, anywhere.",
+        supportLine4: "⭐ Other species? Please message us first (bring your own food; Sun Conures & Macaws not accepted).",
+        supportLine5: "⭐ 5% discount on total boarding fee; higher totals = bigger discounts (full price on holidays).",
+        planBtn: "Customize Your Boarding Plan",
+        birdTypesLabel: "Bird Species (multiple selections allowed):",
+        dateLabel: "🕓 Boarding Dates (minimum 5 days):",
+        extraServiceLabel: "💗 Additional Services:",
+        liveStream: "24/7 Live Streaming (¥1.88/day)",
+        heating: "Heated Warm Air (¥2 per half-day)",
+        totalLabel: "Total: ¥",
+        paymentLabel: "Select your preferred payment method:",
+        alipay: "Alipay (Recommended)",
+        wechat: "WeChat",
+        modalTitle: "Boarding Service Agreement"
+      }
+    };
+
+    let currentLang = 'zh';
+
+    function applyLanguage(lang) {
+      currentLang = lang;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang] && translations[lang][key] !== undefined) {
+          el.innerText = translations[lang][key];
+        }
+      });
+      document.getElementById('langToggle').innerText = lang === 'zh' ? 'EN' : '中文';
+    }
+
+    // ===== 工具函数 =====
+    function formatDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function initDateInputs() {
+      const today = new Date();
+      const maxDate = new Date();
+      maxDate.setDate(today.getDate() + 89);
+
+      const startDateInput = document.getElementById('startDate');
+      const endDateInput = document.getElementById('endDate');
+
+      const todayStr = formatDate(today);
+      const maxStr = formatDate(maxDate);
+
+      startDateInput.value = todayStr;
+      endDateInput.min = todayStr;
+      endDateInput.max = maxStr;
+
+      startDateInput.addEventListener('change', () => {
+        const selectedStart = new Date(startDateInput.value);
+        const newMin = new Date(selectedStart);
+        const newMax = new Date(selectedStart);
+        newMax.setDate(newMin.getDate() + 89);
+
+        endDateInput.min = formatDate(newMin);
+        endDateInput.max = formatDate(newMax);
+
+        const currentEnd = new Date(endDateInput.value);
+        if (endDateInput.value && (currentEnd < newMin || currentEnd > newMax)) {
+          endDateInput.value = formatDate(newMin);
+        }
+        calculateTotal();
+      });
+
+      endDateInput.addEventListener('change', calculateTotal);
+    }
+
+    function calculateTotal() {
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+
+      if (!startDate || !endDate) {
+        document.getElementById('totalCost').innerText = '0.0';
+        return;
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      if (end < start) {
+        document.getElementById('totalCost').innerText = '0.0';
+        return;
+      }
+
+      const days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      if (days > 90) {
+        document.getElementById('totalCost').innerText = '0.0';
+        return;
+      }
+
+      let rawTotal = 0;
+      const checkboxes = document.querySelectorAll('input[name="birdType"]');
+
+      checkboxes.forEach(checkbox => {
+        if (!checkbox.checked) return;
+        const pricePerDay = parseFloat(checkbox.value) || 0;
+        const birdOption = checkbox.closest('.bird-option');
+        const quantityInput = birdOption ? birdOption.querySelector('.quantity-input') : null;
+
+        if (quantityInput) {
+          const qty = parseInt(quantityInput.value, 10) || 0;
+          if (qty > 0) {
+            rawTotal += pricePerDay * qty * days;
+          }
+        } else {
+          rawTotal += pricePerDay * days;
+        }
+      });
+
+      let finalTotal = rawTotal;
+      if (rawTotal >= 50) {
+        finalTotal = rawTotal * 0.88;
+      } else if (rawTotal > 30) {
+        finalTotal = rawTotal * 0.95;
+      }
+
+      document.getElementById('totalCost').innerText = finalTotal.toFixed(1) + ' 🧧已优惠¥' + (rawTotal - finalTotal).toFixed(1);
+    }
+
+    // ===== 页面初始化 =====
+    document.addEventListener('DOMContentLoaded', () => {
+      // 初始化语言
+      applyLanguage('zh');
+
+      // 语言切换
+      document.getElementById('langToggle').addEventListener('click', () => {
+        const newLang = currentLang === 'zh' ? 'en' : 'zh';
+        applyLanguage(newLang);
+      });
+
+      // 日期 & 计算
+      initDateInputs();
+
+      const checkboxes = document.querySelectorAll('input[name="birdType"]');
+      const quantityInputs = document.querySelectorAll('.quantity-input');
+
+      checkboxes.forEach(checkbox => {
+        const birdOption = checkbox.closest('.bird-option');
+        const qty = birdOption ? birdOption.querySelector('.quantity-input') : null;
+        if (qty) qty.disabled = !checkbox.checked;
+        checkbox.addEventListener('change', function () {
+          if (qty) qty.disabled = !this.checked;
+          calculateTotal();
+        });
+      });
+
+      quantityInputs.forEach(input => {
+        input.addEventListener('change', () => {
+          if (parseInt(input.value, 10) < 1 || isNaN(parseInt(input.value, 10))) {
+            input.value = 1;
+          }
+          calculateTotal();
+        });
+      });
+
+      // 支付方式
+      const radioButtons = document.querySelectorAll('input[name="payment"]');
+      const qrCode1 = document.getElementById('qrCode1');
+      const qrCode2 = document.getElementById('qrCode2');
+      radioButtons.forEach(radio => {
+        radio.addEventListener('change', function () {
+          if (this.value === 'wechat') {
+            qrCode1.classList.add('active');
+            qrCode2.classList.remove('active');
+          } else {
+            qrCode1.classList.remove('active');
+            qrCode2.classList.add('active');
+          }
+        });
+      });
+
+      // 背景图
+      loadBackgroundImage();
+
+      // 弹窗
+      const noticeElement = document.getElementById('notice');
+      const modalOverlay = document.getElementById('modalOverlay');
+      const closeModalBtn = document.getElementById('closeModal');
+
+      if (noticeElement) {
+        noticeElement.addEventListener('click', () => {
+          modalOverlay.style.display = 'block';
+        });
+      }
+      if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', () => {
+          modalOverlay.style.display = 'none';
+        });
+      }
+      if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => {
+          if (e.target === modalOverlay) {
+            modalOverlay.style.display = 'none';
+          }
+        });
+      }
+
+      calculateTotal();
+    });
+
+    function jump() {
+      window.open("https://www.office.com");
+    }
+
+    function loadBackgroundImage() {
+      const backgroundImage = document.getElementById('backgroundImage');
+      const img = new Image();
+      img.src = './img/bird.png';
+      img.onload = () => {
+        backgroundImage.style.backgroundImage = `url(${img.src})`;
+        backgroundImage.classList.add('loaded');
+      };
+      img.onerror = () => {
+        console.error('背景图片加载失败');
+      };
+    }
+
+    // tb 函数保留（你可能有其他用途）
+    function tb() {
+      // 可在此添加定制计划逻辑
+    }
+  </script>
+</body>
+
+</html>
