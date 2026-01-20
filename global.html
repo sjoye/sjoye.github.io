@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>全球资产配置追踪（含月度总览）</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 20px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1, h2 {
+      color: #2c3e50;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+      background: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+    th {
+      background-color: #6a0dad;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+    .outflow {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+    .inflow {
+      color: #27ae60;
+      font-weight: bold;
+    }
+    .summary-box {
+      background: #e8f4fc;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .highlight {
+      background-color: #fff9db;
+    }
+    .positive { color: #27ae60; }
+    .negative { color: #e74c3c; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <h2>📈 月度资产总览</h2>
+    <table id="monthly-summary">
+      <thead>
+        <tr>
+          <th>月份</th>
+          <th>总资产（CNY）</th>
+          <th>环比变化</th>
+        </tr>
+      </thead>
+      <tbody id="monthly-body"></tbody>
+    </table>
+
+     <h2>🏦 当前资产配置</h2>
+    <table id="balances-table">
+      <thead>
+        <tr>
+          <th>平台</th>
+          <th>HKD</th>
+          <th>USD</th>
+          <th>CNY</th>
+          <th>美股资产</th>
+          <th>总值 (CNY)</th>
+        </tr>
+      </thead>
+      <tbody id="balances-body"></tbody>
+    </table>
+
+    <h2>💱 资金流动记录</h2>
+    <table id="transactions-table">
+      <thead>
+        <tr>
+          <th>日期</th>
+          <th>说明</th>
+          <th>变动明细</th>
+        </tr>
+      </thead>
+      <tbody id="transactions-body"></tbody>
+    </table>
+
+   
+  </div>
+
+  <script>
+  // ==============================
+  // 配置区
+  // ==============================
+  const config = {
+    exchangeRates: { HKD: 0.89, USD: 7, CNY: 1 },
+    // 初始平台余额（对应 2025-12-31 快照）
+    // 注意：US_Equity 现在表示 美股资产的 USD 价值
+    initialBalances: {
+      "盈立": { HKD: 1100, USD: 2545, CNY: 0, US_Equity: 0 }, 
+      "中银香港": { HKD: 100, USD: 0, CNY: 0, US_Equity: 0 },
+      "汇丰": { HKD: 888, USD: 0, CNY: 0, US_Equity: 0 },
+      "众安": { HKD: 3788, USD: 0, CNY: 0, US_Equity: 0 },
+      "天星": { HKD: 0, USD: 0, CNY: 0, US_Equity: 0 }
+    },
+    // 所有交易
+    transactions: [
+    //   {
+    //     date: "2026-01-05",
+    //     description: "汇丰 → 天星 转账",
+    //     movements: [
+    //       { platform: "汇丰", currency: "HKD", amount: -100 },
+    //       { platform: "天星", currency: "HKD", amount: +100 }
+    //     ]
+    //   },
+      {
+        date: "2026-01-15",
+        description: "美股分红",
+        movements: [
+          { platform: "盈立", currency: "USD", amount: +5 }
+        ]
+      }
+    ]
+  };
+
+  // ==============================
+  // 工具函数
+  // ==============================
+  function toCNY(amount, currency) {
+    return amount * (config.exchangeRates[currency] || 1);
+  }
+
+  function formatNumber(num) {
+    if (isNaN(num)) return "0.00";
+    return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  function getMonthKey(dateStr) {
+    return dateStr.substring(0, 7); // "2026-01"
+  }
+
+  // ==============================
+  // 计算 2025-12 初始总资产（按正确逻辑，但最终强制设为 22800）
+  // ==============================
+  let initialTotal = 0;
+  Object.values(config.initialBalances).forEach(bal => {
+    initialTotal += toCNY(bal.HKD, "HKD") + 
+                    toCNY(bal.USD, "USD") + 
+                    bal.CNY + 
+                    toCNY(bal.US_Equity, "USD"); // ✅ 修正：US_Equity 是 USD
+  });
+
+  // 设为 22,800 CNY
+  initialTotal = 22835;
+
+  // ==============================
+  // 按时间顺序应用交易，计算每月末总资产
+  // ==============================
+  const monthlyTotals = {};
+  monthlyTotals["2025-12"] = initialTotal;
+
+  // 先复制初始余额
+  let current = JSON.parse(JSON.stringify(config.initialBalances));
+
+  // 按日期排序交易
+  const sortedTxs = [...config.transactions].sort((a, b) => a.date.localeCompare(b.date));
+
+  sortedTxs.forEach(tx => {
+    // 应用交易
+    tx.movements.forEach(m => {
+      if (!current[m.platform]) {
+        current[m.platform] = { HKD: 0, USD: 0, CNY: 0, US_Equity: 0 };
+      }
+      const key = m.currency === "US_Equity" ? "US_Equity" : m.currency;
+      current[m.platform][key] += m.amount;
+    });
+
+    // 计算当前总资产（✅ 修正 US_Equity 为 USD）
+    let total = 0;
+    Object.values(current).forEach(bal => {
+      total += toCNY(bal.HKD, "HKD") + 
+               toCNY(bal.USD, "USD") + 
+               bal.CNY + 
+               toCNY(bal.US_Equity, "USD");
+    });
+
+    const month = getMonthKey(tx.date);
+    monthlyTotals[month] = total;
+  });
+
+  // ==============================
+  // 渲染月度总览表（从 2025-12 开始）
+  // ==============================
+  const months = Object.keys(monthlyTotals).sort();
+  const monthlyBody = document.getElementById("monthly-body");
+
+  months.forEach((month, idx) => {
+    const total = monthlyTotals[month];
+    const prev = idx > 0 ? monthlyTotals[months[idx - 1]] : null;
+    const change = prev !== null ? total - prev : 0;
+    const changeStr = prev !== null ? (change >= 0 ? `+${formatNumber(change)}` : formatNumber(change)) : "—";
+    const changeClass = change > 0 ? "positive" : change < 0 ? "negative" : "";
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${month}</td>
+      <td>${formatNumber(total)}</td>
+      <td class="${changeClass}">${changeStr}</td>
+    `;
+    monthlyBody.appendChild(row);
+  });
+
+  // ==============================
+  // 渲染交易流水（倒序）
+  // ==============================
+  const txBody = document.getElementById("transactions-body");
+  config.transactions.slice().reverse().forEach(tx => {
+    let detailHtml = "";
+    tx.movements.forEach(m => {
+      const sign = m.amount >= 0 ? "+" : "";
+      const cls = m.amount >= 0 ? "inflow" : "outflow";
+      detailHtml += `<div><span class="${cls}">${sign}${m.amount} ${m.currency}</span> → ${m.platform}</div>`;
+    });
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${tx.date}</td>
+      <td>${tx.description}</td>
+      <td>${detailHtml}</td>
+    `;
+    txBody.appendChild(row);
+  });
+
+  // ==============================
+  // 渲染当前平台余额
+  // ==============================
+  const balBody = document.getElementById("balances-body");
+  let currentTotalCNY = 0;
+
+  Object.entries(current).forEach(([platform, bal]) => {
+    const hkdCNY = toCNY(bal.HKD, "HKD");
+    const usdCNY = toCNY(bal.USD, "USD");
+    const cny = bal.CNY;
+    const equityCNY = toCNY(bal.US_Equity, "USD"); // ✅ 关键修正！
+    const total = hkdCNY + usdCNY + cny + equityCNY;
+    currentTotalCNY += total;
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${platform}</td>
+      <td>${bal.HKD}</td>
+      <td>${bal.USD}</td>
+      <td>${bal.CNY}</td>
+      <td>${bal.US_Equity} USD</td> <!-- 可选：显示单位 -->
+      <td>${formatNumber(total)}</td>
+    `;
+    balBody.appendChild(row);
+  });
+
+  // 小计行
+  const totalRow = document.createElement("tr");
+  totalRow.className = "highlight";
+  totalRow.innerHTML = `
+    <td><strong>总计</strong></td>
+    <td colspan="4"></td>
+    <td><strong>${formatNumber(currentTotalCNY)}</strong></td>
+  `;
+  balBody.appendChild(totalRow);
+
+</script>
+</body>
+</html>
