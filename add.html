@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>下料计算系统 · 公式配置</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root,
+    [data-theme="light"] {
+      --bg: #eef0f5;
+      --card: #ffffff;
+      --sub: #f7f8fb;
+      --line: #e3e6ef;
+      --line-str: #cfd4e3;
+      --input: #ffffff;
+      --text: #3c4059;
+      --text-str: #242741;
+      --muted: #9096ae;
+      --dim: #b7bccd;
+      --accent: #7367f0;
+      --accent-soft: rgba(115, 103, 240, 0.10);
+      --accent-line: rgba(115, 103, 240, 0.35);
+      --green: #2fa964;
+      --orange: #e8912a;
+      --shadow: 0 2px 10px rgba(60, 64, 110, 0.05);
+      --toast-ok-bg: #eaf9f0; --toast-ok-tx: #1f7a49; --toast-ok-bd: #c8efda;
+      --toast-er-bg: #fdeeee; --toast-er-tx: #c74146; --toast-er-bd: #f8d3d4;
+    }
+
+    [data-theme="dark"] {
+      --bg: #1c2035;
+      --card: #272c45;
+      --sub: #22263c;
+      --line: #363c58;
+      --line-str: #464d6d;
+      --input: #1f2439;
+      --text: #d7dbee;
+      --text-str: #f2f3fb;
+      --muted: #9299bc;
+      --dim: #6c739a;
+      --accent: #8b7ff5;
+      --accent-soft: rgba(139, 127, 245, 0.16);
+      --accent-line: rgba(139, 127, 245, 0.4);
+      --green: #56d973;
+      --orange: #ffa94d;
+      --shadow: 0 2px 12px rgba(0, 0, 0, 0.20);
+      --toast-ok-bg: #1b3a2d; --toast-ok-tx: #8fe3ac; --toast-ok-bd: #2d6b4f;
+      --toast-er-bg: #3a1d1e; --toast-er-tx: #ff9d9f; --toast-er-bd: #6b3436;
+    }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      transition: background .25s, color .25s;
+      padding-bottom: 40px;
+    }
+
+    .wrap { max-width: 1560px; margin: 0 auto; padding: 0 22px; }
+
+    /* ================= 顶栏 ================= */
+    .topbar {
+      background: var(--card);
+      border-bottom: 1px solid var(--line);
+      padding: 13px 0;
+      margin-bottom: 18px;
+      transition: background .25s, border-color .25s;
+    }
+    .topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark {
+      width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+      background: var(--accent); display: flex; align-items: center; justify-content: center;
+    }
+    .brand-mark svg { width: 20px; height: 20px; }
+    .brand-txt h1 { font-size: 16px; font-weight: 700; color: var(--text-str); letter-spacing: .5px; }
+    .brand-txt p { font-size: 11px; color: var(--muted); letter-spacing: 1px; margin-top: 1px; }
+    .theme-btn {
+      display: flex; align-items: center; gap: 7px;
+      padding: 8px 14px; border: 1px solid var(--line-str); border-radius: 9px;
+      background: transparent; color: var(--text); font-size: 12.5px; font-weight: 600;
+      cursor: pointer; transition: all .2s;
+    }
+    .theme-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+    .theme-btn svg { width: 15px; height: 15px; }
+
+    /* ================= 工具栏（设计图顶部） ================= */
+    .toolbar {
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 16px 20px; box-shadow: var(--shadow); margin-bottom: 14px;
+    }
+    .tb-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .tb-label { font-size: 15px; color: var(--text-str); font-weight: 600; white-space: nowrap; }
+    select, .btn {
+      font-family: inherit; font-size: 13.5px; border-radius: 8px; cursor: pointer;
+      transition: border-color .2s, background .2s, color .2s, transform .1s;
+    }
+    select {
+      min-width: 190px; padding: 9px 32px 9px 12px; border: 1px solid var(--line-str);
+      background: var(--input); color: var(--text-str); appearance: none;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239096ae' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 11px center;
+    }
+    select:focus, .fconst:focus, .pnum:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .btn {
+      padding: 9px 22px; border: 1px solid var(--line-str); background: var(--sub); color: var(--text); font-weight: 600;
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent); color: #fff; opacity: .9; }
+    .btn-danger:hover { border-color: #e05a5a; color: #e05a5a; background: rgba(224, 90, 90, .08); }
+    .unit-note { font-size: 12px; color: var(--muted); margin-top: 11px; }
+    .unit-note b { color: var(--accent); font-weight: 600; }
+
+    /* 收起 / 展开公式参数按钮 */
+    .btn-toggle { display: inline-flex; align-items: center; gap: 6px; }
+    .btn-toggle .chev {
+      width: 14px; height: 14px; flex-shrink: 0;
+      fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+      transition: transform .3s ease;
+    }
+    .btn-toggle.is-collapsed .chev { transform: rotate(180deg); }
+
+    /* 打印表单按钮 */
+    .btn-print { display: inline-flex; align-items: center; gap: 7px; }
+    .btn-print svg {
+      width: 15px; height: 15px; flex-shrink: 0;
+      fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+    }
+
+    /* ================= 基础参数 ================= */
+    /* 计算参数区收起动画：与 #boardWrap 同一套 max-height 过渡，间距放在外层以免收起后留空白 */
+    .params-wrap {
+      overflow: hidden; margin-bottom: 18px;
+      transition: max-height .36s cubic-bezier(.4, 0, .2, 1), opacity .28s ease, margin-bottom .3s ease;
+    }
+    .params-wrap.is-collapsed { opacity: 0; pointer-events: none; margin-bottom: 0; }
+    .params {
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+      padding: 16px 20px 18px; box-shadow: var(--shadow); margin-bottom: 0;
+      border-left: 3px solid var(--accent);
+    }
+    .params-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+    .params-head h2 { font-size: 14px; font-weight: 700; color: var(--text-str); }
+    .params-head span { font-size: 11.5px; color: var(--muted); }
+    .param-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(172px, 1fr)); gap: 12px; }
+    .param { background: var(--sub); border: 1px solid var(--line); border-radius: 9px; padding: 10px 13px; }
+    .param label { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 7px; }
+    .param label em { font-style: normal; font-size: 10.5px; color: var(--dim); letter-spacing: .5px; }
+    .param .pwrap { display: flex; align-items: center; gap: 8px; }
+    .pnum {
+      width: 100%; padding: 8px 11px; border: 1px solid var(--line-str); border-radius: 7px;
+      background: var(--input); color: var(--text-str); font-size: 15px; font-weight: 700;
+      font-variant-numeric: tabular-nums; transition: border-color .2s, box-shadow .2s;
+    }
+    .param .u { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+    .param-auto { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 11.5px; color: var(--muted); cursor: pointer; user-select: none; }
+    .param-auto input { accent-color: var(--accent); cursor: pointer; }
+
+    /* ================= 窗参数：顶部信息 / 固定窗高 / 窗型单选 ================= */
+    .params-meta { display: flex; align-items: center; gap: 14px 22px; flex-wrap: wrap; margin-bottom: 14px; }
+    .meta-check { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text); cursor: pointer; user-select: none; }
+    .meta-check input { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; cursor: pointer; flex-shrink: 0; }
+    .meta-field { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; color: var(--text-str); }
+    .meta-field > span { white-space: nowrap; }
+    .meta-field input[type="text"], .meta-field select, .ptxt {
+      font-family: inherit; border: 1px solid var(--line-str); border-radius: 7px;
+      background: var(--input); color: var(--text-str); font-size: 13px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .meta-field input[type="text"] { width: 170px; padding: 7px 10px; }
+    .meta-field input#pPhone { width: 150px; }
+    .meta-field input#pRemark { width: 220px; }
+    .meta-field select { min-width: 170px; padding: 7px 30px 7px 10px; }
+    .ptxt { width: 100%; padding: 8px 11px; font-size: 15px; font-weight: 700; }
+    .meta-field input[type="text"]:focus, .meta-field select:focus, .ptxt:focus {
+      outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    /* 固定窗高：未选中固定窗型时灰显 + 禁用 */
+    .fixed-param { transition: opacity .2s; }
+    .fixed-param.is-locked { opacity: .58; }
+    .fixed-param.is-locked .pwrap { filter: grayscale(1); }
+    .pnum:disabled { background: var(--sub); color: var(--muted); cursor: not-allowed; border-style: dashed; }
+    .param-hint { margin-top: 7px; font-size: 10.5px; line-height: 1.5; color: var(--muted); }
+    .fixed-param.is-open .param-hint { color: var(--accent); font-weight: 600; }
+
+    /* 窗型分类：方框外观，但语义为 radio，天然互斥（只能单选） */
+    .win-type-row {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 15px 0 10px;
+      padding: 10px 13px; border: 1px dashed var(--accent-line); border-radius: 9px; background: var(--accent-soft);
+    }
+    .only-one { color: #e0484c; font-size: 13px; font-weight: 800; white-space: nowrap; }
+    .wt-options { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+    .wt-opt { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 700; color: var(--text-str); cursor: pointer; user-select: none; }
+    .wt-opt input[type="radio"] {
+      appearance: none; -webkit-appearance: none; position: relative; margin: 0; flex-shrink: 0;
+      width: 17px; height: 17px; border: 2px solid var(--line-str); border-radius: 3px;
+      background: var(--input); cursor: pointer; transition: background .15s, border-color .15s;
+    }
+    .wt-opt input[type="radio"]:checked { background: var(--accent); border-color: var(--accent); }
+    .wt-opt input[type="radio"]:checked::after {
+      content: ''; position: absolute; left: 4px; top: 0; width: 5px; height: 9px;
+      border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+    }
+
+    /* 窗型选择：3 列圆形单选 */
+    .shape-grid {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 10px;
+      padding: 12px 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--sub);
+    }
+    .shape-title { align-self: center; font-size: 14px; font-weight: 800; color: var(--text-str); }
+    .shape-opt { display: inline-flex; align-items: center; gap: 8px; padding: 3px 2px; font-size: 13px; color: var(--text); cursor: pointer; user-select: none; }
+    .shape-opt input[type="radio"] { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; cursor: pointer; flex-shrink: 0; }
+    .shape-opt.is-checked { color: var(--accent); font-weight: 700; }
+    .shape-cell-empty { min-height: 10px; }
+    .shape-state { margin-top: 9px; font-size: 11.5px; color: var(--muted); line-height: 1.7; }
+    .shape-state b { color: var(--accent); }
+    @media (max-width: 900px) { .shape-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 560px) { .shape-grid { grid-template-columns: 1fr; } }
+
+    /* ================= 公式配置区（4 列） ================= */
+    .board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: start; }
+    /* 公式配置区收起动画：max-height 由 JS 按实际高度设置，保证过渡平滑 */
+    .board-wrap {
+      overflow: hidden;
+      transition: max-height .36s cubic-bezier(.4, 0, .2, 1), opacity .28s ease;
+    }
+    .board-wrap.is-collapsed { opacity: 0; pointer-events: none; }
+    .fcol { min-width: 0; }
+    .fgroup {
+      position: relative; background: var(--card); border: 1px solid var(--line-str);
+      border-radius: 12px; padding: 22px 14px 16px; box-shadow: var(--shadow); margin-top: 10px;
+    }
+    .fgroup > h3 {
+      position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
+      background: var(--card); padding: 0 12px; font-size: 14.5px; font-weight: 700;
+      color: var(--text-str); white-space: nowrap; letter-spacing: 1px;
+    }
+    .fsub { background: var(--sub); border: 1px solid var(--line); border-radius: 9px; padding: 12px 12px 10px; margin-bottom: 12px; }
+    .fsub:last-child { margin-bottom: 0; }
+    .fsub.plain { background: transparent; border: none; padding: 2px 4px 0; }
+    .fsub > h4 { font-size: 12.5px; font-weight: 700; color: var(--accent); margin-bottom: 10px; letter-spacing: .5px; }
+    .frow {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 5px;
+      padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 13px; min-height: 36px;
+    }
+    .frow:last-child { border-bottom: none; }
+    .fname { font-weight: 600; color: var(--text); flex-shrink: 0; }
+    .feq { color: var(--dim); margin: 0 2px; }
+    .ftokens { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; flex: 1; }
+    .tk-var { color: var(--text-str); font-weight: 600; }
+    .tk-op { color: var(--muted); font-weight: 700; padding: 0 1px; }
+    .tk-txt, .tk-num { color: var(--text); font-weight: 600; }
+    .fconst {
+      width: 54px; padding: 4px 6px; text-align: center;
+      border: 1px solid var(--line-str); border-radius: 5px;
+      background: var(--input); color: var(--text-str); font-size: 13px; font-weight: 600;
+      font-variant-numeric: tabular-nums; transition: border-color .2s, box-shadow .2s;
+    }
+    .fconst::placeholder { color: var(--dim); font-weight: 400; }
+    .frow.oneline .ftokens { flex: 0 0 auto; }
+    .board-foot { margin-top: 12px; }
+    .board-foot .frow { background: var(--card); border: 1px solid var(--line-str); border-radius: 9px; padding: 10px 13px; box-shadow: var(--shadow); }
+
+    /* ============ 纱网自动计算 / 配件数量（共用浅色强调块样式） ============ */
+    .mesh-sub { border-color: var(--accent-line); background: var(--accent-soft); }
+    .mesh-sub > h4 { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+    .mesh-tag { font-size: 10px; font-weight: 700; letter-spacing: .5px; color: var(--accent); background: var(--card); border: 1px solid var(--accent-line); border-radius: 20px; padding: 2px 8px; }
+    .mesh-note { font-size: 11px; color: var(--muted); line-height: 1.7; margin: 0 0 8px; }
+    .mesh-note b { color: var(--accent); }
+    .mesh-cut, .parts-input {
+      width: 54px; padding: 4px 6px; text-align: center;
+      border: 1px solid var(--line-str); border-radius: 5px;
+      background: var(--input); color: var(--text-str); font-size: 13px; font-weight: 600;
+      font-variant-numeric: tabular-nums; transition: border-color .2s, box-shadow .2s;
+    }
+    .mesh-cut:focus, .parts-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .mesh-part { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .mesh-qty { width: 68px; }
+    .parts-input { width: 68px; }
+    .mesh-unit { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+    .mesh-live {
+      margin-top: 9px; padding: 9px 10px; border-radius: 8px; font-size: 11.5px; line-height: 1.8;
+      color: var(--text); background: var(--card); border: 1px dashed var(--accent-line);
+      font-variant-numeric: tabular-nums;
+    }
+    .mesh-live b { color: var(--accent); font-weight: 700; }
+    .mesh-live.empty { color: var(--dim); }
+
+    /* ================= 操作说明（还原设计图底部） ================= */
+    .help { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 18px 0 22px; }
+    .help-item { font-size: 12.5px; color: var(--muted); line-height: 1.8; }
+    .help-item h4 { font-size: 13px; color: var(--text-str); font-weight: 700; margin-bottom: 3px; }
+    .help-item b { color: var(--accent); font-weight: 600; }
+
+    /* ================= 底部自动计算结果 ================= */
+    .results { border-top: 2px solid var(--accent-line); padding-top: 18px; }
+    .res-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+    .res-head .rt { display: flex; align-items: baseline; gap: 11px; flex-wrap: wrap; }
+    .res-head h2 { font-size: 18px; font-weight: 800; color: var(--text-str); }
+    .res-head .sub { font-size: 11.5px; color: var(--muted); letter-spacing: 1px; }
+    .res-summary { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill {
+      font-size: 11.5px; font-weight: 600; padding: 5px 11px; border-radius: 20px;
+      background: var(--accent-soft); color: var(--accent); white-space: nowrap;
+    }
+    .pill.warn { background: rgba(232, 145, 42, .12); color: var(--orange); }
+    .pill.ok { background: rgba(47, 169, 100, .12); color: var(--green); }
+
+    .res-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: start; }
+    .res-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 15px 8px; box-shadow: var(--shadow); }
+    .res-card h3 { font-size: 13.5px; font-weight: 700; color: var(--text-str); padding-bottom: 10px; border-bottom: 2px solid var(--accent-soft); margin-bottom: 4px; letter-spacing: .5px; }
+    .res-sec { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: .5px; padding: 9px 0 3px; }
+    .res-row { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 8px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+    .res-row:last-child { border-bottom: none; }
+    .res-name { font-size: 12.5px; color: var(--text); }
+    .res-val { font-size: 16px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .res-val.empty { color: var(--dim); font-size: 13px; font-weight: 600; }
+    .res-expr { grid-column: 1 / -1; font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: .2px; }
+    .res-unit { font-size: 10px; color: var(--muted); font-weight: 600; margin-left: 2px; }
+    .res-actions { display: flex; gap: 8px; }
+
+    .foot-note { text-align: center; font-size: 11px; color: var(--dim); margin-top: 22px; letter-spacing: .5px; }
+
+    /* Toast */
+    .toast-container { position: fixed; top: 18px; right: 22px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 11px 18px; border-radius: 9px; font-size: 12.5px; font-weight: 600; border: 1px solid transparent; animation: toastIn .3s ease, toastOut .3s ease 2.7s forwards; max-width: 320px; }
+    .toast-success { background: var(--toast-ok-bg); color: var(--toast-ok-tx); border-color: var(--toast-ok-bd); }
+    .toast-error { background: var(--toast-er-bg); color: var(--toast-er-tx); border-color: var(--toast-er-bd); }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: none; } }
+    @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+    @media (max-width: 1320px) {
+      .board, .res-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 720px) {
+      .wrap { padding: 0 13px; }
+      .board, .res-grid, .help { grid-template-columns: 1fr; }
+      .btn { padding: 8px 15px; }
+      select { min-width: 150px; }
+    }
+
+    /* ================= 打印表单：预览弹层 + A4 横向打印 ================= */
+    .print-modal {
+      display: none; position: fixed; inset: 0; z-index: 300;
+      background: rgba(22, 25, 43, .62); overflow: auto; padding: 26px 18px 40px;
+    }
+    .print-modal.is-open { display: block; }
+    .print-dialog { width: min(1180px, 100%); margin: 0 auto; }
+    .pf-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+      background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+      padding: 11px 14px; margin-bottom: 12px; box-shadow: var(--shadow);
+    }
+    .pf-bar h3 { font-size: 14px; color: var(--text-str); }
+    .pf-bar p { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+    .pf-bar-actions { display: flex; gap: 8px; }
+    .print-paper {
+      background: #fff; color: #111; padding: 16px 16px 12px; border-radius: 4px;
+      box-shadow: 0 18px 46px rgba(0, 0, 0, .28);
+      font-family: 'SimSun', '宋体', 'Microsoft YaHei', sans-serif;
+    }
+    .pf-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .pf-table col.c1  { width: 3.4%; }
+    .pf-table col.c2  { width: 8.2%; }
+    .pf-table col.c3  { width: 9.4%; }
+    .pf-table col.c4  { width: 8.2%; }
+    .pf-table col.c5  { width: 10.6%; }
+    .pf-table col.c6  { width: 9.2%; }
+    .pf-table col.c7  { width: 9.6%; }
+    .pf-table col.c8  { width: 8.8%; }
+    .pf-table col.c9  { width: 7.4%; }
+    .pf-table col.c10 { width: 7.4%; }
+    .pf-table col.c11 { width: 5.4%; }
+    .pf-table col.c12 { width: 12.4%; }
+    .pf-table th, .pf-table td {
+      border: 1px solid #111; padding: 5px 6px; text-align: center; vertical-align: middle;
+      font-size: 12.5px; line-height: 1.45; color: #111; font-weight: 400;
+    }
+    .pf-table thead tr:first-child th { height: 34px; }
+    .pf-table thead tr:nth-child(2) th { height: 54px; }
+    .pf-table tbody td { height: 80px; }
+    .pf-table tbody tr.pf-blank td { height: 44px; }
+    .pf-cust { writing-mode: vertical-rl; letter-spacing: 3px; font-size: 12px; font-weight: 700 !important; }
+    .pf-label { font-weight: 700 !important; }
+    .pf-left { text-align: left !important; padding-left: 9px !important; }
+    .pf-order-val { font-size: 9.5px; color: #555; text-align: left !important; padding-left: 9px !important; letter-spacing: .2px; white-space: nowrap; }
+    .pf-contact { text-align: left !important; padding: 4px 8px !important; }
+    .pf-contact-in { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 16px; }
+    .pf-contact-item { display: inline-flex; align-items: baseline; max-width: 100%; }
+    .pf-contact-val { color: #1a4fa0; font-weight: 600; overflow-wrap: anywhere; }
+    .pf-contact-empty { color: #b9bdc7; letter-spacing: -1px; }
+    .pf-pink { color: #e600a9 !important; font-weight: 700 !important; letter-spacing: 1px; white-space: nowrap; }
+    .pf-num { color: #1a4fa0; font-weight: 600; white-space: nowrap; }
+    .pf-shape { font-size: 11.5px; font-weight: 700; color: #111; white-space: nowrap; }
+    .pf-dash { color: #666; letter-spacing: 1px; font-size: 11px; }
+    .pf-line { display: block; }
+    .pf-foot {
+      display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 10px;
+      font-size: 11px; color: #333; line-height: 1.7;
+    }
+    .pf-foot b { color: #111; font-weight: 700; }
+    .pf-tip { margin-top: 7px; font-size: 10.5px; color: #888; }
+
+    @page { size: A4 landscape; margin: 8mm; }
+    @media print {
+      html, body { background: #fff !important; color: #111 !important; padding: 0 !important; }
+      body > *:not(#printModal) { display: none !important; }
+      html.demo-expired #printModal { display: none !important; }
+      #printModal {
+        display: block !important; position: static !important; inset: auto !important;
+        background: none !important; padding: 0 !important; overflow: visible !important;
+      }
+      .print-dialog { width: 100% !important; }
+      .pf-bar, .pf-tip { display: none !important; }
+      .print-paper { box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; }
+      .pf-table th, .pf-table td, .pf-num, .pf-pink { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+
+  <!-- ================= 演示保护：有效期锁屏样式 ================= -->
+  <style>
+    html.demo-expired, html.demo-expired body { height: 100%; overflow: hidden !important; }
+    html.demo-expired body > *:not(.demo-lock) { display: none !important; }
+    .demo-lock {
+      position: fixed; inset: 0; z-index: 2147483647;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      background: radial-gradient(1200px 600px at 50% -10%, #e7e2ff 0%, #eef0f5 55%, #eef0f5 100%);
+      font-family: 'Inter', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      color: #3c4059; text-align: center;
+    }
+    .demo-lock-card {
+      width: min(460px, 100%); padding: 42px 34px 34px; border-radius: 18px;
+      background: #fff; border: 1px solid #e3e6ef;
+      box-shadow: 0 18px 50px rgba(60, 64, 110, 0.14);
+    }
+    .demo-lock-ico {
+      width: 60px; height: 60px; margin: 0 auto 20px; border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; background: linear-gradient(135deg, #8b7ff5, #7367f0);
+      box-shadow: 0 8px 20px rgba(115, 103, 240, 0.32);
+    }
+    .demo-lock-ico svg { width: 30px; height: 30px; }
+    .demo-lock-card h2 { font-size: 25px; letter-spacing: 2px; color: #242741; }
+    .demo-lock-card p { margin-top: 12px; font-size: 13px; line-height: 1.9; color: #9096ae; }
+    .demo-lock-range {
+      margin-top: 22px; padding: 11px 0; font-size: 12px; letter-spacing: 1px; color: #7367f0;
+      border-top: 1px solid #e3e6ef; border-bottom: 1px solid #e3e6ef;
+    }
+    .demo-lock-now { margin-top: 14px; font-size: 11px; letter-spacing: 1px; color: #b7bccd; }
+    [data-theme="dark"] .demo-lock {
+      background: radial-gradient(1200px 600px at 50% -10%, #2c2752 0%, #1c2035 60%, #1c2035 100%);
+      color: #d7dbee;
+    }
+    [data-theme="dark"] .demo-lock-card { background: #272c45; border-color: #363c58; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35); }
+    [data-theme="dark"] .demo-lock-card h2 { color: #f2f3fb; }
+    [data-theme="dark"] .demo-lock-range { border-color: #363c58; color: #a99dff; }
+  </style>
+</head>
+
+<body>
+
+  <!-- ================= 演示保护：有效期 + 禁用右键 / F12 ================= -->
+  <script>
+    /* ==================================================================
+       DemoGuard 演示保护
+       1) 仅在 ALLOW 允许的日期内可用，其余日期整页显示「项目体验到期」
+       2) 屏蔽右键菜单、F12 及常见的查看源码 / 开发者工具快捷键
+       3) 每 30 秒重新判断一次时间（跨天自动锁定或恢复）
+       说明：这是演示现场的防误操作，不是加密，源码仍可从文件本身查看。
+       ================================================================== */
+    (function () {
+      'use strict';
+
+      var CFG = {
+        year: 2026,                    // 限定年份；改成 null 表示每年以下两天都能演示
+        allow: [[11, 14], [11, 15]]    // 允许的日期 [月, 日]
+      };
+
+      function allowed(d) {
+        if (CFG.year !== null && d.getFullYear() !== CFG.year) return false;
+        var m = d.getMonth() + 1, day = d.getDate();
+        for (var i = 0; i < CFG.allow.length; i++) {
+          if (CFG.allow[i][0] === m && CFG.allow[i][1] === day) return true;
+        }
+        return false;
+      }
+
+      var lock = null;
+      function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+      function mountLock(d) {
+        if (lock || !document.body) return;
+        lock = document.createElement('div');
+        lock.className = 'demo-lock';
+        lock.innerHTML =
+          '<div class="demo-lock-card">' +
+            '<div class="demo-lock-ico">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+                '<rect x="4" y="10" width="16" height="11" rx="2" />' +
+                '<path d="M8 10V7a4 4 0 0 1 8 0v3" />' +
+                '<circle cx="12" cy="15.5" r="1.2" fill="currentColor" stroke="none" />' +
+              '</svg>' +
+            '</div>' +
+            '<h2>项目体验到期</h2>' +
+            '<p>当前日期不在演示有效期内，请联系项目负责人获取新版演示链接。</p>' +
+            '<div class="demo-lock-range">演示有效期 ' + (CFG.year || '每年') + ' / 11 / 14 — 11 / 15</div>' +
+            '<div class="demo-lock-now">本机日期 ' + d.getFullYear() + ' / ' + pad(d.getMonth() + 1) + ' / ' + pad(d.getDate()) + '</div>' +
+          '</div>';
+        document.body.appendChild(lock);
+      }
+
+      function check() {
+        var d = new Date();
+        var ok = allowed(d);
+        window.__DEMO_OK__ = ok;
+        var root = document.documentElement;
+        if (ok) {
+          root.classList.remove('demo-expired');
+          if (lock && lock.parentNode) { lock.parentNode.removeChild(lock); lock = null; }
+        } else {
+          root.classList.add('demo-expired');
+          mountLock(d);
+        }
+      }
+
+      /* 屏蔽右键菜单 */
+      document.addEventListener('contextmenu', function (e) {
+        e.preventDefault(); e.stopPropagation(); return false;
+      }, true);
+
+      /* 屏蔽 F12 / Ctrl+Shift+I,J,C,K / Ctrl+U / Ctrl+S / Shift+F10 */
+      document.addEventListener('keydown', function (e) {
+        var k = (e.key || '').toUpperCase();
+        var code = e.keyCode || e.which;
+        var mod = e.ctrlKey || e.metaKey;
+        var hit = code === 123 || k === 'F12' ||
+                  (e.shiftKey && (k === 'F10')) ||
+                  (mod && e.shiftKey && (k === 'I' || k === 'J' || k === 'C' || k === 'K')) ||
+                  (mod && (k === 'U' || k === 'S'));
+        if (hit) { e.preventDefault(); e.stopPropagation(); return false; }
+      }, true);
+
+      check();                                        // 打开页面立即判断
+      document.addEventListener('DOMContentLoaded', check);
+      setInterval(check, 30 * 1000);                  // 每 30 秒复检一次
+    })();
+  </script>
+
+  <!-- ================= 顶栏 ================= -->
+  <header class="topbar">
+    <div class="wrap">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M9 3v18M15 3v18M3 9h18M3 15h18" />
+          </svg>
+        </div>
+        <div class="brand-txt">
+          <h1>下料系统V26.1</h1>
+          <p>CUTTING FORMULA WORKBENCH</p>
+        </div>
+      </div>
+      <button class="theme-btn" id="themeBtn">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+        <span id="themeText">暗色模式</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- ================= 工具栏（设计图顶部） ================= -->
+    <section class="toolbar">
+      <div class="tb-row">
+        <span class="tb-label">请选择公式：</span>
+        <select id="formulaSel" title="选择已保存的公式方案"></select>
+        <button class="btn" id="btnNew">新建</button>
+        <button class="btn btn-primary" id="btnSave">保存</button>
+        <button class="btn btn-toggle" id="btnToggleBoard" aria-expanded="true" aria-controls="boardWrap" title="收起 4 个设置参数区块">
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+          <span id="toggleBoardText">收起公式参数</span>
+        </button>
+        <button class="btn btn-toggle" id="btnToggleParams" aria-expanded="true" aria-controls="paramsWrap" title="收起计算参数区">
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+          <span id="toggleParamsText">收起计算参数</span>
+        </button>
+        <button class="btn btn-print" id="btnPrintForm" title="打开下料单打印预览">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+            <path d="M6 14h12v7H6z"/><path d="M18 12h.01"/>
+          </svg>
+          <span>打印表单</span>
+        </button>
+        <button class="btn btn-danger" id="btnDelete">删除</button>
+      </div>
+      <div class="unit-note">计量单位全部为：<b>mm / 毫米</b> · 修改任一数值，页面底部结果自动重算</div>
+    </section>
+
+    <!-- ================= 基础参数（按设计图：窗参数，可整块收起） ================= -->
+    <div class="params-wrap" id="paramsWrap">
+    <section class="params">
+      <div class="params-head">
+        <h2>计算参数 · 窗参数</h2>
+        <span>窗尺寸 / 单位：mm 毫米 · 公式中的「宽 / 高 / 推窗高 / 上下方」取自此处，输入后下方所有公式自动求值</span>
+      </div>
+
+      <!-- 顶部：高低扇 / 客户 / 型材系列 -->
+      <div class="params-meta">
+        <label class="meta-check">
+          <input type="checkbox" id="highLow" />
+          <span>如果是高低扇，请选中此选项！— 默认为平轨平扇，不分高低</span>
+        </label>
+        <label class="meta-field"><span>客户：</span><input id="pCustomer" type="text" placeholder="请输入客户名称" /></label>
+        <label class="meta-field"><span>电话：</span><input id="pPhone" type="text" placeholder="请输入联系电话" /></label>
+        <label class="meta-field"><span>备注：</span><input id="pRemark" type="text" placeholder="请输入备注信息" /></label>
+        <label class="meta-field"><span>型材系列：</span><select id="profileSel"></select></label>
+      </div>
+
+      <!-- 尺寸参数：截图 6 项 + 公式所需的「上下方」 -->
+      <div class="param-grid">
+        <div class="param">
+          <label>窗号 <em>WINDOW NO.</em></label>
+          <div class="pwrap"><input class="ptxt" id="pNo" type="text" placeholder="如 W-001" /></div>
+        </div>
+        <div class="param">
+          <label>高 <em>HEIGHT</em></label>
+          <div class="pwrap"><input class="pnum" id="pH" type="number" value="1800" min="0" step="1" /><span class="u">mm</span></div>
+        </div>
+        <div class="param">
+          <label>宽 <em>WIDTH</em></label>
+          <div class="pwrap"><input class="pnum" id="pW" type="number" value="1500" min="0" step="1" /><span class="u">mm</span></div>
+        </div>
+        <div class="param">
+          <label>推窗高 <em>SASH HEIGHT</em></label>
+          <div class="pwrap"><input class="pnum" id="pT" type="number" value="1200" min="0" step="1" /><span class="u">mm</span></div>
+        </div>
+        <div class="param">
+          <label>上下方 <em>TRANSOM</em></label>
+          <div class="pwrap"><input class="pnum" id="pS" type="number" value="700" min="0" step="1" /><span class="u">mm</span></div>
+          <label class="param-auto"><input type="checkbox" id="autoS" /> 自动取「两固上下方」计算结果</label>
+        </div>
+        <div class="param fixed-param" id="paramFixedDown">
+          <label>下固定窗高 <em>LOWER FIXED</em></label>
+          <div class="pwrap"><input class="pnum fixed-h" id="pFD" type="number" min="0" step="1" placeholder="仅固定窗型可填" /><span class="u">mm</span></div>
+          <div class="param-hint" id="hintFD"></div>
+        </div>
+        <div class="param fixed-param" id="paramFixedUp">
+          <label>上固定窗高 <em>UPPER FIXED</em></label>
+          <div class="pwrap"><input class="pnum fixed-h" id="pFU" type="number" min="0" step="1" placeholder="仅固定窗型可填" /><span class="u">mm</span></div>
+          <div class="param-hint" id="hintFU"></div>
+        </div>
+      </div>
+
+      <!-- 窗型分类：只能单选，决定是否可填写固定窗高 -->
+      <div class="win-type-row">
+        <span class="only-one">只能单选</span>
+        <div class="wt-options" id="winTypeOptions"></div>
+      </div>
+
+      <!-- 窗型选择：全部单选 -->
+      <div class="shape-grid" id="shapeGrid"></div>
+      <div class="shape-state" id="shapeState"></div>
+    </section>
+    </div>
+
+    <!-- ================= 公式配置区（由 JS 按设计图渲染，可整块收起） ================= -->
+    <div class="board-wrap" id="boardWrap">
+      <section class="board" id="board"></section>
+    </div>
+
+    <!-- ================= 操作说明（还原设计图底部） ================= -->
+    <section class="help">
+      <div class="help-item">
+        <h4>添加新客户操作步骤：</h4>
+        <div>一、先填写下面各个小框的公式需要的<b>数据内容</b>。</div>
+      </div>
+      <div class="help-item">
+        <h4>修改操作：</h4>
+        <div>一、选择要修改的<b>公式名称</b>，改完点击「保存」。</div>
+      </div>
+      <div class="help-item">
+        <h4>删除操作：</h4>
+        <div>一、选择要删除的<b>公式名称</b>，点击「删除」。</div>
+      </div>
+    </section>
+
+    <!-- ================= 最底部：自动计算结果 ================= -->
+    <section class="results">
+      <div class="res-head">
+        <div class="rt">
+          <h2>自动计算结果</h2>
+          <span class="sub">AUTO CALCULATION · 单位 mm</span>
+        </div>
+        <div class="res-actions">
+          <div class="res-summary" id="resSummary"></div>
+          <button class="btn" id="btnCopy">复制结果</button>
+        </div>
+      </div>
+      <div class="res-grid" id="resGrid"></div>
+    </section>
+
+    <div class="foot-note">计量单位：mm / 毫米 · 结果保留两位小数 · 数据仅保存在本机浏览器</div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ================= 打印表单预览（工具栏「打印表单」按钮打开，打印时只输出本块） ================= -->
+  <div class="print-modal" id="printModal" aria-hidden="true">
+    <div class="print-dialog">
+      <div class="pf-bar">
+        <div>
+          <h3>下料单 · 打印预览</h3>
+          <p>A4 横向 · 数值取自当前计算参数与底部自动计算结果 · 窗型以文字表示 · 可在空白处手工补录</p>
+        </div>
+        <div class="pf-bar-actions">
+          <button class="btn btn-primary" id="btnDoPrint">打印</button>
+          <button class="btn" id="btnClosePrint">关闭</button>
+        </div>
+      </div>
+      <div class="print-paper" id="printPaper"></div>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       公式方案数据（JSON 统一数据源）
+       每个方案的 c 对象：键 = 公式行 id，值 = 该行常量输入框的值
+       "" 表示该输入框留空待填；第一项为默认方案
+       ================================================================== -->
+  <script type="application/json" id="formulaData">
+{
+  "defaultScheme": "两槽西南平铝",
+  "mesh": {
+    "match": "888",
+    "special": {
+      "label": "888 铝材系列",
+      "a": { "ref": "b3", "name": "纱企（竖纱）", "cut": 7 },
+      "b": { "ref": "b7", "name": "横纱", "cut": 4 }
+    },
+    "default": {
+      "label": "其他铝材系列",
+      "a": { "ref": "b1", "name": "光勾企", "cut": 63 },
+      "b": { "ref": "S", "name": "上下方", "cut": 4 }
+    }
+  },
+  "windowTypes": {
+    "note": "只能单选",
+    "default": "normal",
+    "options": [
+      { "id": "normal", "label": "正常窗型", "fixed": [] },
+      { "id": "lower",  "label": "下固定窗型", "fixed": ["down"] },
+      { "id": "both",   "label": "上下固定窗型", "fixed": ["down", "up"] }
+    ]
+  },
+  "shapes": {
+    "title": "窗型选择",
+    "default": "两固两开",
+    "options": [
+      "", "拼窗一固两开x2", "拼窗两固两开x2",
+      "无搓头两开", "无搓头三开", "无搓头四开",
+      "一固两开", "两固三开", "两固四开",
+      "两固两开", "三固三开", "三固四开",
+      "三固两开", "", "四固四开"
+    ]
+  },
+  "schemes": [
+    {
+      "name": "两槽西南平铝",
+      "c": {
+        "a2": 35, "a3": 20, "a4": 20, "a5": "", "a6": "", "a7": "", "a8": "",
+        "b1": 50, "b2": 50, "b3": 50, "b4": 35, "b5": 35, "b6": 85, "b7": "",
+        "c1": 50, "c2": 123, "c3": 123, "c4": 23, "c5": 5, "c6": 60, "c7": 85, "c8": 107,
+        "d1": 50, "d2": 50, "d3": 50, "d4": 123, "d5": 123, "d6": ""
+      }
+    },
+    {
+      "name": "76平铝系",
+      "c": {
+        "a2": 35, "a3": 20, "a4": 20, "a5": "", "a6": "", "a7": "", "a8": "",
+        "b1": 55, "b2": 55, "b3": 55, "b4": 35, "b5": 10, "b6": 95, "b7": "",
+        "c1": 50, "c2": 128, "c3": 128, "c4": 23, "c5": 6, "c6": 60, "c7": 85, "c8": 107,
+        "d1": 55, "d2": 55, "d3": 55, "d4": 128, "d5": 128, "d6": 18
+      }
+    },
+    {
+      "name": "85铝都单体",
+      "c": {
+        "a2": 32, "a3": 20, "a4": 20, "a5": "", "a6": "", "a7": "", "a8": "",
+        "b1": 45, "b2": 45, "b3": 45, "b4": 0, "b5": -40, "b6": -35, "b7": "",
+        "c1": 70, "c2": 130, "c3": 130, "c4": 24, "c5": "", "c6": 62, "c7": 84, "c8": 108,
+        "d1": 45, "d2": 45, "d3": 45, "d4": 130, "d5": 130, "d6": 18
+      }
+    },
+    {
+      "name": "广赞高轨道",
+      "c": {
+        "a2": 30, "a3": 25, "a4": 25, "a5": "", "a6": "", "a7": "", "a8": "",
+        "b1": 65, "b2": 65, "b3": 65, "b4": 136, "b5": 165, "b6": 242, "b7": 65,
+        "c1": 6, "c2": 147, "c3": 147, "c4": 27, "c5": 64, "c6": 93, "c7": 122, "c8": 151,
+        "d1": 65, "d2": 65, "d3": 65, "d4": 147, "d5": 147, "d6": 15
+      }
+    },
+    {
+      "name": "888A平轨",
+      "c": {
+        "a2": 30, "a3": 25, "a4": 25, "a5": "", "a6": "", "a7": "", "a8": "",
+        "b1": 52, "b2": 52, "b3": 52, "b4": 136, "b5": 165, "b6": 242, "b7": 55,
+        "c1": 6, "c2": 134, "c3": 134, "c4": 25, "c5": 64, "c6": 93, "c7": 122, "c8": 151,
+        "d1": 52, "d2": 52, "d3": 52, "d4": 134, "d5": 134, "d6": 25
+      }
+    }
+  ]
+}
+  </script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* 演示到期：整页锁屏，不再初始化业务逻辑 */
+      if (window.__DEMO_OK__ === false) return;
+
+      /* ============================================================
+         公式结构（只描述公式，不含任何数值）
+         所有常量数值统一存放在 #formulaData 的 JSON 中，按方案切换
+         token 类型：
+           ['var', 变量键, 中文]   变量：W 宽 / H 高 / T 推窗高 / S 上下方
+           ['c']                   常量输入框，值由当前方案的 JSON 提供
+           ['op', '运算符']       运算符
+           ['txt', '文本']        括号等
+           ['num', 数字]          固定数字（除数等）
+         ============================================================ */
+      var COLS = [
+        {
+          g: '外框设置', subs: [
+            { s: '外框配置', rows: [
+              { id: 'a1', n: '边封', t: [['var', 'H', '高']] },
+              { id: 'a2', n: '上固、上下滑', t: [['var', 'W', '宽'], ['op', '-'], ['c']] },
+              { id: 'a3', n: '中柱', t: [['var', 'H', '高'], ['op', '-'], ['var', 'T', '推窗高'], ['op', '-'], ['c']] },
+              { id: 'a4', n: '盖板', t: [['var', 'H', '高'], ['op', '-'], ['var', 'T', '推窗高'], ['op', '-'], ['c']] },
+              { id: 'a5', n: '划线', t: [['var', 'T', '推窗高'], ['op', '+'], ['c']] }
+            ]},
+            { s: '中柱位置', rows: [
+              { id: 'a6', n: '两固中柱位置', t: [['txt', '('], ['var', 'W', '宽'], ['op', '-'], ['c'], ['txt', ')'], ['op', '/'], ['num', 2]] },
+              { id: 'a7', n: '三固中柱位置', t: [['txt', '('], ['var', 'W', '宽'], ['op', '-'], ['c'], ['txt', ')'], ['op', '/'], ['num', 3]] },
+              { id: 'a8', n: '四固中柱位置', t: [['txt', '('], ['var', 'W', '宽'], ['op', '-'], ['c'], ['txt', ')'], ['op', '/'], ['num', 4]] }
+            ]}
+          ],
+          parts: true
+        },
+        {
+          g: '页扇设置', subs: [
+            { s: '光勾企设置', rows: [
+              { id: 'b1', n: '外光勾企', t: [['var', 'T', '推窗高'], ['op', '-'], ['c']] },
+              { id: 'b2', n: '内光勾企', t: [['var', 'T', '推窗高'], ['op', '-'], ['c']] },
+              { id: 'b3', n: '竖纱', t: [['var', 'T', '推窗高'], ['op', '-'], ['c']] }
+            ]},
+            { s: '上下方设置', rows: [
+              { id: 'b4', n: '两固上下方', t: [['txt', '('], ['var', 'W', '宽'], ['op', '-'], ['c'], ['txt', ')'], ['op', '/'], ['num', 2]] },
+              { id: 'b5', n: '三固上下方', t: [['txt', '('], ['var', 'W', '宽'], ['op', '-'], ['c'], ['txt', ')'], ['op', '/'], ['num', 3]] },
+              { id: 'b6', n: '四固上下方', t: [['txt', '('], ['var', 'W', '宽'], ['op', '-'], ['c'], ['txt', ')'], ['op', '/'], ['num', 4]] },
+              { id: 'b7', n: '横纱', t: [['var', 'S', '上下方'], ['op', '+'], ['c']] }
+            ]}
+          ],
+          mesh: true
+        },
+        {
+          g: '玻璃设置', subs: [
+            { s: '扇玻设置', rows: [
+              { id: 'c1', n: '扇玻宽', t: [['var', 'S', '上下方'], ['op', '-'], ['c']] },
+              { id: 'c2', n: '内扇玻高', t: [['var', 'T', '推窗高'], ['op', '-'], ['c']] },
+              { id: 'c3', n: '外扇玻高', t: [['var', 'T', '推窗高'], ['op', '-'], ['c']] }
+            ]},
+            { s: '固玻设置', rows: [
+              { id: 'c4', n: '固玻高', t: [['var', 'H', '高'], ['op', '-'], ['var', 'T', '推窗高'], ['op', '-'], ['c']] },
+              { id: 'c5', n: '一固固玻宽', t: [['var', 'W', '宽'], ['op', '-'], ['c']] },
+              { id: 'c6', n: '两固固玻宽', t: [['txt', '('], ['var', 'W', '宽'], ['op', '-'], ['c'], ['txt', ')'], ['op', '/'], ['num', 2]] },
+              { id: 'c7', n: '三固固玻宽', t: [['txt', '('], ['var', 'W', '宽'], ['op', '-'], ['c'], ['txt', ')'], ['op', '/'], ['num', 3]] },
+              { id: 'c8', n: '四固固玻宽', t: [['txt', '('], ['var', 'W', '宽'], ['op', '-'], ['c'], ['txt', ')'], ['op', '/'], ['num', 4]] }
+            ]}
+          ]
+        },
+        {
+          g: '无上固定窗型参数设置', subs: [
+            { s: '光勾企设置', rows: [
+              { id: 'd1', n: '外光勾企', t: [['var', 'H', '高'], ['op', '-'], ['c']] },
+              { id: 'd2', n: '内光勾企', t: [['var', 'H', '高'], ['op', '-'], ['c']] },
+              { id: 'd3', n: '竖纱', t: [['var', 'H', '高'], ['op', '-'], ['c']] }
+            ]},
+            { s: '扇玻设置', rows: [
+              { id: 'd4', n: '内扇玻高', t: [['var', 'H', '高'], ['op', '-'], ['c']] },
+              { id: 'd5', n: '外扇玻高', t: [['var', 'H', '高'], ['op', '-'], ['c']] }
+            ]}
+          ],
+          foot: { id: 'd6', n: '两边封（拼管）中间宽度', t: [['c']] }
+        }
+      ];
+
+      var VAR_LABEL = { W: '宽', H: '高', T: '推窗高', S: '上下方' };
+      var STORE_KEY = 'cutting_formulas_v1';
+      var THEME_KEY = 'cutting_theme_v1';
+      var $ = function (id) { return document.getElementById(id); };
+      function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+      function showToast(msg, type) {
+        var t = document.createElement('div');
+        t.className = 'toast toast-' + (type || 'success');
+        t.textContent = msg;
+        $('toastContainer').appendChild(t);
+        setTimeout(function () { t.remove(); }, 3000);
+      }
+
+      /* ================= 主题 ================= */
+      function setTheme(t) {
+        document.documentElement.setAttribute('data-theme', t);
+        try { localStorage.setItem(THEME_KEY, t); } catch (e) { }
+        $('themeText').textContent = t === 'dark' ? '亮色模式' : '暗色模式';
+        $('themeIcon').innerHTML = t === 'dark'
+          ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'
+          : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+      }
+      var savedTheme = 'light';
+      try { savedTheme = localStorage.getItem(THEME_KEY) || 'light'; } catch (e) { }
+      setTheme(savedTheme === 'dark' ? 'dark' : 'light');
+      $('themeBtn').addEventListener('click', function () {
+        setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      });
+
+      /* ================= 公式方案持久化（内置 JSON + 本地覆盖） ================= */
+      /* 内置数据源：全部方案常量值都在 #formulaData 的 JSON 里，COLS 只描述公式结构；
+         localStorage 仅保存用户的修改与自建方案，不会丢掉代码内置的方案。 */
+      var BASE = JSON.parse($('formulaData').textContent);
+      var BUILTIN = {};
+      BASE.schemes.forEach(function (s) { BUILTIN[s.name] = true; });
+
+      /* JSON 的键是公式行 id（每行仅一个常量框），DOM 的 data-key 统一为 id_0 */
+      function toConstMap(c) {
+        var o = {};
+        Object.keys(c).forEach(function (k) {
+          o[k + '_0'] = (c[k] === '' || c[k] === null) ? '' : String(c[k]);
+        });
+        return o;
+      }
+      function builtinSchemes() {
+        var out = {};
+        BASE.schemes.forEach(function (s) { out[s.name] = toConstMap(s.c); });
+        return out;
+      }
+
+      function loadStore() {
+        /* 内置方案常驻，下拉顺序即 JSON 顺序；默认方案排第一并优先选中 */
+        var d = { active: BASE.defaultScheme, schemes: builtinSchemes() };
+        try {
+          var raw = localStorage.getItem(STORE_KEY);
+          if (raw) {
+            var u = JSON.parse(raw);
+            if (u && u.schemes) {
+              Object.keys(u.schemes).forEach(function (n) { d.schemes[n] = u.schemes[n]; });
+              if (u.active && d.schemes[u.active]) d.active = u.active;
+            }
+          }
+        } catch (e) { }
+        return d;
+      }
+      function saveStore(d) { try { localStorage.setItem(STORE_KEY, JSON.stringify(d)); } catch (e) { } }
+
+      var store = loadStore();
+      if (!store.schemes[store.active]) store.active = BASE.defaultScheme;
+      /* 纱网扣减量状态必须在 renderBoard() 之前初始化（下方函数在渲染时就会读到） */
+      var meshState = { key: null, a: '', b: '', qty: '' };
+
+      /* 配件数量：属订单输入，切换公式方案 / 重绘界面时都要保留（同样须在 renderBoard 之前初始化） */
+      var partsState = { wheel: '', acc: '', lock: '' };
+      var PARTS = [
+        { id: 'partsWheel', key: 'wheel', n: '车轮' },
+        { id: 'partsAcc',   key: 'acc',   n: '附件' },
+        { id: 'partsLock',  key: 'lock',  n: '锁' }
+      ];
+      function normCount(raw) {
+        var s = String(raw === undefined || raw === null ? '' : raw).trim();
+        if (s === '') return '';
+        var n = Number(s);
+        if (!isFinite(n)) return 0;
+        return Math.max(0, Math.round(n));   /* 非负整数，不设上限 */
+      }
+      function partsHtml() {
+        return '<div class="fsub mesh-sub">' +
+          '<h4>配件数量 <span class="mesh-tag">手动填写</span></h4>' +
+          '<div class="mesh-note">按实际用量填写，合计会同步到底部「自动计算结果」</div>' +
+          PARTS.map(function (p) {
+            return '<div class="frow">' +
+              '<span class="fname">' + esc(p.n) + '</span><span class="feq">=</span>' +
+              '<span class="ftokens">' +
+                '<input class="parts-input" id="' + p.id + '" type="number" min="0" step="1" inputmode="numeric" placeholder="0" value="' + esc(normCount(partsState[p.key])) + '" />' +
+                '<span class="mesh-unit">个</span>' +
+              '</span></div>';
+          }).join('') +
+          '<div class="mesh-live" id="partsLive">等待填写…</div>' +
+        '</div>';
+      }
+
+      /* ================= 渲染公式配置区 ================= */
+      function tokensHtml(row) {
+        var ci = 0;
+        return row.t.map(function (tk) {
+          var k = tk[0];
+          if (k === 'var') return '<span class="tk-var">' + esc(tk[2]) + '</span>';
+          if (k === 'op') return '<span class="tk-op">' + (tk[1] === '-' ? '−' : tk[1] === '+' ? '+' : tk[1]) + '</span>';
+          if (k === 'txt') return '<span class="tk-txt">' + esc(tk[1]) + '</span>';
+          if (k === 'num') return '<span class="tk-num">' + tk[1] + '</span>';
+          if (k === 'c') {
+            var key = row.id + '_' + ci; ci++;
+            var v = store.schemes[store.active][key];
+            if (v === undefined) v = '';
+            return '<input class="fconst" type="number" step="any" data-key="' + key + '" value="' + esc(v) + '" placeholder="—" />';
+          }
+          return '';
+        }).join('');
+      }
+
+      function rowHtml(row) {
+        return '<div class="frow" data-row="' + row.id + '">' +
+          '<span class="fname">' + esc(row.n) + '</span>' +
+          '<span class="feq">=</span>' +
+          '<span class="ftokens">' + tokensHtml(row) + '</span>' +
+          '</div>';
+      }
+
+      function renderBoard() {
+        $('board').innerHTML = COLS.map(function (col) {
+          var subs = col.subs.map(function (sec) {
+            return '<div class="fsub' + (sec.plain ? ' plain' : '') + '">' +
+              (sec.s ? '<h4>' + esc(sec.s) + '</h4>' : '') +
+              sec.rows.map(rowHtml).join('') + '</div>';
+          }).join('');
+          if (col.parts) subs += partsHtml();
+          if (col.mesh) subs += meshHtml();
+          var foot = col.foot ? '<div class="board-foot">' + rowHtml(col.foot) + '</div>' : '';
+          return '<div class="fcol"><div class="fgroup"><h3>' + esc(col.g) + '</h3>' + subs + '</div>' + foot + '</div>';
+        }).join('');
+      }
+      renderBoard();
+
+      /* ============================================================
+         窗型参数（配置统一来自 #formulaData 的 windowTypes / shapes）
+         1) 窗型分类、窗型选择都用 radio，天然互斥 → 只能单选
+         2) 仅当选中含 fixed 的窗型时，对应固定窗高输入框才可填写
+         3) 固定窗高属订单记录，不参与现有公式求值，故不影响历史结果
+         ============================================================ */
+      var WIN_TYPES = BASE.windowTypes || { default: 'normal', options: [] };
+      var SHAPES = BASE.shapes || { title: '窗型选择', default: '', options: [] };
+      var winTypeState = WIN_TYPES.default || 'normal';
+      var shapeState = SHAPES.default || '';
+
+      function winTypeCfg() {
+        var opts = WIN_TYPES.options || [];
+        for (var i = 0; i < opts.length; i++) if (opts[i].id === winTypeState) return opts[i];
+        return opts[0] || { id: 'normal', label: '正常窗型', fixed: [] };
+      }
+      function renderWinTypes() {
+        $('winTypeOptions').innerHTML = (WIN_TYPES.options || []).map(function (o) {
+          return '<label class="wt-opt">' +
+            '<input type="radio" name="winType" value="' + esc(o.id) + '"' + (o.id === winTypeState ? ' checked' : '') + ' />' +
+            '<span>' + esc(o.label) + '</span></label>';
+        }).join('');
+      }
+      function renderShapes() {
+        $('shapeGrid').innerHTML = (SHAPES.options || []).map(function (name, i) {
+          if (i === 0) return '<div class="shape-title">' + esc(SHAPES.title || '窗型选择') + '</div>';
+          if (!name) return '<div class="shape-cell-empty"></div>';
+          return '<label class="shape-opt' + (name === shapeState ? ' is-checked' : '') + '">' +
+            '<input type="radio" name="winShape" id="shape_' + i + '" value="' + esc(name) + '"' + (name === shapeState ? ' checked' : '') + ' />' +
+            '<span>' + esc(name) + '</span></label>';
+        }).join('');
+      }
+      function fixedEnabled(kind) {
+        return (winTypeCfg().fixed || []).indexOf(kind) >= 0;
+      }
+      function updateShapeState() {
+        var f = winTypeCfg().fixed || [];
+        var names = { down: '下固定窗高', up: '上固定窗高' };
+        var tip = f.length
+          ? '可填写：<b>' + f.map(function (k) { return names[k] || k; }).join('、') + '</b>'
+          : '固定窗高不可填写（需选择「下固定窗型」或「上下固定窗型」）';
+        $('shapeState').innerHTML = '当前窗型：<b>' + esc(winTypeCfg().label) + '</b>　·　窗型选择：<b>' +
+          esc(shapeState || '未选') + '</b>　·　' + tip;
+      }
+      function syncFixedFields() {
+        [['down', 'pFD', 'paramFixedDown', 'hintFD'], ['up', 'pFU', 'paramFixedUp', 'hintFU']].forEach(function (o) {
+          var ok = fixedEnabled(o[0]);
+          $(o[1]).disabled = !ok;                    /* 禁用 = 不能填写，已填的值保留但不生效 */
+          $(o[2]).classList.toggle('is-locked', !ok);
+          $(o[2]).classList.toggle('is-open', ok);
+          $(o[3]).textContent = ok
+            ? '已启用：可填写' + (o[0] === 'down' ? '下' : '上') + '固定窗高'
+            : '当前「' + winTypeCfg().label + '」不可填写，需选择固定窗型';
+        });
+        updateShapeState();
+      }
+      renderWinTypes();
+      renderShapes();
+      syncFixedFields();
+
+      /* 单选 / 型材系列联动（与下方已有的 change 监听互不干扰） */
+      document.addEventListener('change', function (e) {
+        if (e.target.name === 'winType') {
+          winTypeState = e.target.value;
+          syncFixedFields();
+          return;
+        }
+        if (e.target.name === 'winShape') {
+          shapeState = e.target.value;
+          document.querySelectorAll('.shape-opt').forEach(function (l) {
+            l.classList.toggle('is-checked', l.querySelector('input').checked);
+          });
+          updateShapeState();
+          return;
+        }
+        if (e.target.id === 'profileSel') applyScheme(e.target.value);
+      });
+
+      /* ================= 读取当前所有输入 ================= */
+      function allRows() {
+        var out = [];
+        COLS.forEach(function (col, ci) {
+          col.subs.forEach(function (sec, si) {
+            sec.rows.forEach(function (row) { out.push({ row: row, g: col.g, s: sec.s, ci: ci }); });
+          });
+          if (col.foot) out.push({ row: col.foot, g: col.g, s: '', ci: ci, foot: true });
+        });
+        return out;
+      }
+      var ROWS = allRows();
+
+      /* ================= 纱网自动计算（规则统一存于 #formulaData 的 mesh 节点） =================
+         ref = 'S' 取基础参数「上下方」；其余为公式行 id（b1 / b3 / b7 …）的计算结果。
+         下拉方案名命中 mesh.match（默认 888）时用 special 规则，其余用 default 规则。 */
+      function meshRule() {
+        var cfg = BASE.mesh || {}, hit = false;
+        try { hit = new RegExp(cfg.match || '888').test(String(store.active)); } catch (e) { }
+        var key = hit ? 'special' : 'default';
+        var r = cfg[key] || {};
+        return { key: key, label: r.label || '', a: r.a || {}, b: r.b || {} };
+      }
+      function meshCuts(rule) {
+        /* 切换规则（888 ↔ 其他）时恢复 JSON 里的默认扣减量；同一规则内保留用户手改值 */
+        if (meshState.key !== rule.key) {
+          /* 切换规则只重置扣减量，纱网数量属于订单输入，原样保留 */
+          meshState = { key: rule.key, a: String(rule.a.cut), b: String(rule.b.cut), qty: meshState.qty };
+        }
+        return meshState;
+      }
+      /* 纱网数量：0–99 的整数；留空表示未填，超范围自动收敛到边界 */
+      function normQty(raw) {
+        var s = String(raw === undefined || raw === null ? '' : raw).trim();
+        if (s === '') return '';
+        var n = Number(s);
+        if (!isFinite(n)) return 0;
+        return Math.max(0, Math.min(99, Math.round(n)));
+      }
+      function meshQtyVal() {
+        var q = normQty(meshState.qty);
+        return q === '' ? null : q;
+      }
+      function meshHtml() {
+        var r = meshRule(), c = meshCuts(r);
+        return '<div class="fsub mesh-sub">' +
+          '<h4>纱网设置 <span class="mesh-tag">按方案自动切换</span></h4>' +
+          '<div class="mesh-note">当前「' + esc(store.active) + '」判定为 <b>' + esc(r.label) + '</b> · 扣减量单位 mm，可直接修改</div>' +
+          '<div class="frow">' +
+            '<span class="fname">纱网压边</span><span class="feq">=</span>' +
+            '<span class="ftokens">' +
+              '<span class="mesh-part"><span class="tk-txt">(</span>' +
+                '<span class="tk-var">' + esc(r.a.name) + '</span><span class="tk-op">−</span>' +
+                '<input class="mesh-cut" id="meshACut" type="number" step="any" value="' + esc(c.a) + '" />' +
+                '<span class="tk-txt">)</span></span>' +
+              '<span class="tk-op">×</span>' +
+              '<span class="mesh-part"><span class="tk-txt">(</span>' +
+                '<span class="tk-var">' + esc(r.b.name) + '</span><span class="tk-op">−</span>' +
+                '<input class="mesh-cut" id="meshBCut" type="number" step="any" value="' + esc(c.b) + '" />' +
+                '<span class="tk-txt">)</span></span>' +
+            '</span>' +
+          '</div>' +
+          '<div class="frow">' +
+            '<span class="fname">纱网数量</span><span class="feq">=</span>' +
+            '<span class="ftokens">' +
+              '<input class="mesh-cut mesh-qty" id="meshQty" type="number" min="0" max="99" step="1" inputmode="numeric" placeholder="0–99" value="' + esc(normQty(c.qty)) + '" />' +
+              '<span class="mesh-unit">片</span><span class="mesh-unit">（可填 0–99）</span>' +
+            '</span>' +
+          '</div>' +
+          '<div class="mesh-live" id="meshLive">等待计算…</div>' +
+        '</div>';
+      }
+
+      function constVal(row, idx) {
+        var el = document.querySelector('.fconst[data-key="' + row.id + '_' + idx + '"]');
+        return el ? el.value.trim() : '';
+      }
+      function numOrNull(s) {
+        if (s === '' || s === null || s === undefined) return null;
+        var n = Number(s);
+        return isFinite(n) ? n : null;
+      }
+      function pnum(id) { return numOrNull($(id).value); }
+
+      /* ================= 计算核心 ================= */
+      function evalRow(row, V) {
+        var expr = '', text = '', ci = 0, missing = false;
+        for (var i = 0; i < row.t.length; i++) {
+          var tk = row.t[i], k = tk[0];
+          if (k === 'var') {
+            var v = V[tk[1]];
+            if (v === null || v === undefined) { missing = true; expr += '0'; text += tk[2] + '(未填)'; }
+            else { expr += '(' + v + ')'; text += tk[2] + '(' + v + ')'; }
+          } else if (k === 'c') {
+            var raw = constVal(row, ci); ci++;
+            var n = numOrNull(raw);
+            if (n === null) { missing = true; expr += '0'; text += '[空]'; }
+            else { expr += '(' + n + ')'; text += n; }
+          } else if (k === 'op') {
+            expr += tk[1]; text += ' ' + (tk[1] === '-' ? '−' : tk[1]) + ' ';
+          } else if (k === 'txt') {
+            expr += tk[1]; text += tk[1];
+          } else if (k === 'num') {
+            expr += tk[1]; text += tk[1];
+          }
+        }
+        if (missing || !/^[\d\s+\-*/().]+$/.test(expr)) return { value: null, text: text };
+        try {
+          var r = Function('"use strict";return (' + expr + ');')();
+          return { value: isFinite(r) ? r : null, text: text };
+        } catch (e) { return { value: null, text: text }; }
+      }
+
+      function fmtVal(n) {
+        if (n === null) return '待填';
+        var r = Math.round(n * 100) / 100;
+        return String(r);
+      }
+
+      function recalc() {
+        var V = { W: pnum('pW'), H: pnum('pH'), T: pnum('pT'), S: pnum('pS') };
+
+        /* 上下方自动取「两固上下方」结果，避免循环依赖，单独先算 */
+        if ($('autoS').checked) {
+          var b4 = null;
+          for (var i = 0; i < ROWS.length; i++) if (ROWS[i].row.id === 'b4') { b4 = ROWS[i].row; break; }
+          var r = evalRow(b4, { W: V.W, H: V.H, T: V.T, S: 0 });
+          V.S = r.value;
+          $('pS').value = r.value === null ? '' : String(Math.round(r.value * 100) / 100);
+          $('pS').disabled = true;
+        } else {
+          $('pS').disabled = false;
+        }
+
+        var computed = 0, missing = 0;
+        var byCol = {}, valueMap = {};
+        ROWS.forEach(function (item) {
+          var res = evalRow(item.row, V);
+          valueMap[item.row.id] = res.value;
+          if (res.value === null) missing++; else computed++;
+          if (!byCol[item.ci]) byCol[item.ci] = { g: item.g, groups: [], map: {} };
+          if (!byCol[item.ci].map[item.s]) { byCol[item.ci].map[item.s] = []; byCol[item.ci].groups.push(item.s); }
+          byCol[item.ci].map[item.s].push({ row: item.row, res: res });
+        });
+
+        /* ---- 纱网自动计算：按当前方案选规则，取已算出的公式结果做二次运算 ---- */
+        var mr = meshRule(), mc = meshCuts(mr);
+        function mref(ref) {
+          if (ref === 'S') return V.S;
+          return valueMap[ref] === undefined ? null : valueMap[ref];
+        }
+        var mAv = mref(mr.a.ref), mBv = mref(mr.b.ref);
+        var mCa = numOrNull(mc.a), mCb = numOrNull(mc.b);
+        var mOk = mAv !== null && mAv !== undefined && mBv !== null && mBv !== undefined && mCa !== null && mCb !== null;
+        var mA = mOk ? mAv - mCa : null;
+        var mB = mOk ? mBv - mCb : null;
+        var mP = mOk ? mA * mB : null;
+        var mQty = meshQtyVal();
+        var mTotal = (mOk && mQty !== null) ? mP * mQty : null;
+        var mesh = { rule: mr, av: mAv, bv: mBv, ca: mCa, cb: mCb, A: mA, B: mB, P: mP, qty: mQty, total: mTotal, ok: mOk };
+
+        function meshResHtml(m) {
+          var r = m.rule;
+          var qtyText = (m.ok && m.qty !== null)
+            ? ' · 数量 ' + m.qty + ' 片 · 合计 ' + fmtVal(m.total) + ' mm²' : '';
+          var expr = m.ok
+            ? '(' + r.a.name + ' ' + fmtVal(m.av) + ' − ' + fmtVal(m.ca) + ') × (' + r.b.name + ' ' + fmtVal(m.bv) + ' − ' + fmtVal(m.cb) + ') = ' + fmtVal(m.A) + ' × ' + fmtVal(m.B) + ' = ' + fmtVal(m.P) + ' mm²' + qtyText
+            : '(' + r.a.name + ' − ' + fmtVal(m.ca) + ') × (' + r.b.name + ' − ' + fmtVal(m.cb) + ') · 待填';
+          return '<div class="res-sec">纱网设置 · ' + esc(r.label) + '</div>' +
+            '<div class="res-row" data-rid="mesh">' +
+              '<span class="res-name">纱网压边</span>' +
+              '<span class="res-val' + (m.ok ? '' : ' empty') + '">' + fmtVal(m.P) +
+                (m.ok ? '<span class="res-unit">mm²</span>' : '') + '</span>' +
+              '<span class="res-expr">' + esc(expr) + '</span>' +
+            '</div>';
+        }
+
+        var meshLive = $('meshLive');
+        if (meshLive) {
+          meshLive.className = 'mesh-live' + (mOk ? '' : ' empty');
+          meshLive.innerHTML = mOk
+            ? '自动计算：<b>' + esc(mr.a.name) + ' ' + fmtVal(mAv) + ' − ' + fmtVal(mCa) + ' = ' + fmtVal(mA) + ' mm</b>　/　<b>' + esc(mr.b.name) + ' ' + fmtVal(mBv) + ' − ' + fmtVal(mCb) + ' = ' + fmtVal(mB) + ' mm</b><br>纱网压边 = ' + fmtVal(mA) + ' × ' + fmtVal(mB) + ' = <b>' + fmtVal(mP) + ' mm²</b>' +
+              (mQty === null
+                ? '<br>纱网数量：<b>未填</b>（可填 0–99 片）'
+                : '<br>纱网数量 <b>' + mQty + ' 片</b> · 合计 = ' + fmtVal(mP) + ' × ' + mQty + ' = <b>' + fmtVal(mTotal) + ' mm²</b>')
+            : '待填：请补全所用公式的常量或基础参数后自动计算';
+        }
+
+        /* ---- 配件数量汇总（车轮 / 附件 / 锁） ---- */
+        var pVals = PARTS.map(function (p) {
+          var v = normCount(partsState[p.key]);
+          return { n: p.n, v: v === '' ? null : v };
+        });
+        var pFilled = pVals.filter(function (o) { return o.v !== null; });
+        var pTotal = pFilled.reduce(function (s, o) { return s + o.v; }, 0);
+        var pDetail = pVals.map(function (o) { return o.n + ' ' + (o.v === null ? '未填' : o.v) + ' 个'; }).join(' · ');
+        function partsResHtml() {
+          return '<div class="res-sec">配件数量</div>' +
+            '<div class="res-row" data-rid="parts">' +
+              '<span class="res-name">配件合计</span>' +
+              '<span class="res-val' + (pFilled.length ? '' : ' empty') + '">' +
+                (pFilled.length ? pTotal + '<span class="res-unit">个</span>' : '待填') + '</span>' +
+              '<span class="res-expr">' + esc(pDetail) + '</span>' +
+            '</div>';
+        }
+        var partsLive = $('partsLive');
+        if (partsLive) {
+          partsLive.className = 'mesh-live' + (pFilled.length ? '' : ' empty');
+          partsLive.innerHTML = pFilled.length
+            ? '配件合计 <b>' + pTotal + ' 个</b>　·　' + esc(pDetail)
+            : '未填写：请填写车轮 / 附件 / 锁 的用量（非负整数）';
+        }
+
+        $('resSummary').innerHTML =
+          '<span class="pill ok">已算出 ' + computed + ' 项</span>' +
+          (missing ? '<span class="pill warn">待填 ' + missing + ' 项</span>' : '') +
+          '<span class="pill">共 ' + ROWS.length + ' 条公式</span>';
+
+        $('resGrid').innerHTML = COLS.map(function (col, ci) {
+          var box = byCol[ci];
+          if (!box) return '';
+          var body = box.groups.map(function (secName) {
+            return (secName ? '<div class="res-sec">' + esc(secName) + '</div>' : '') +
+              box.map[secName].map(function (it) {
+                var v = it.res.value;
+                return '<div class="res-row" data-rid="' + it.row.id + '">' +
+                  '<span class="res-name">' + esc(it.row.n) + '</span>' +
+                  '<span class="res-val' + (v === null ? ' empty' : '') + '">' + fmtVal(v) +
+                  (v === null ? '' : '<span class="res-unit">mm</span>') + '</span>' +
+                  '<span class="res-expr">' + esc(it.res.text) + (v === null ? '' : ' = ' + fmtVal(v)) + '</span>' +
+                  '</div>';
+              }).join('');
+          }).join('');
+          if (col.parts) body += partsResHtml();
+          if (col.mesh) body += meshResHtml(mesh);
+          return '<div class="res-card"><h3>' + esc(col.g) + '</h3>' + body + '</div>';
+        }).join('');
+      }
+
+      /* ================= 收起 / 展开公式参数区（4 个设置区块） ================= */
+      var boardWrap = $('boardWrap');
+      var boardCollapsed = false;
+      function setBoardCollapsed(v) {
+        boardCollapsed = v;
+        var btn = $('btnToggleBoard');
+        $('toggleBoardText').textContent = v ? '展开公式参数' : '收起公式参数';
+        btn.classList.toggle('is-collapsed', v);
+        btn.setAttribute('aria-expanded', String(!v));
+        btn.title = v ? '展开 4 个设置参数区块' : '收起 4 个设置参数区块';
+        if (v) {
+          /* 先锁定当前真实高度，强制 reflow 后再收到 0，CSS 过渡才会生效 */
+          boardWrap.style.maxHeight = boardWrap.scrollHeight + 'px';
+          void boardWrap.offsetHeight;
+          boardWrap.classList.add('is-collapsed');
+          boardWrap.style.maxHeight = '0px';
+        } else {
+          boardWrap.classList.remove('is-collapsed');
+          boardWrap.style.maxHeight = boardWrap.scrollHeight + 'px';
+          /* 动画结束后交还自适应高度，避免切换方案后内容被裁切 */
+          setTimeout(function () { if (!boardCollapsed) boardWrap.style.maxHeight = ''; }, 380);
+        }
+      }
+      $('btnToggleBoard').addEventListener('click', function () {
+        setBoardCollapsed(!boardCollapsed);
+      });
+
+      /* ================= 收起 / 展开计算参数区（与公式参数区彼此独立） ================= */
+      var paramsWrap = $('paramsWrap');
+      var paramsCollapsed = false;
+      function setParamsCollapsed(v) {
+        paramsCollapsed = v;
+        var btn = $('btnToggleParams');
+        $('toggleParamsText').textContent = v ? '展开计算参数' : '收起计算参数';
+        btn.classList.toggle('is-collapsed', v);
+        btn.setAttribute('aria-expanded', String(!v));
+        btn.title = v ? '展开计算参数区' : '收起计算参数区';
+        if (v) {
+          /* 同样先锁真实高度并强制 reflow，否则 CSS 过渡不会触发 */
+          paramsWrap.style.maxHeight = paramsWrap.scrollHeight + 'px';
+          void paramsWrap.offsetHeight;
+          paramsWrap.classList.add('is-collapsed');
+          paramsWrap.style.maxHeight = '0px';
+        } else {
+          paramsWrap.classList.remove('is-collapsed');
+          paramsWrap.style.maxHeight = paramsWrap.scrollHeight + 'px';
+          /* 动画结束交还自适应：窗口变窄导致窗型网格换列时不会被裁切 */
+          setTimeout(function () { if (!paramsCollapsed) paramsWrap.style.maxHeight = ''; }, 380);
+        }
+      }
+      $('btnToggleParams').addEventListener('click', function () {
+        setParamsCollapsed(!paramsCollapsed);
+      });
+
+      /* ================= 事件绑定：任一输入变化即重算 ================= */
+      document.addEventListener('input', function (e) {
+        if (e.target.classList.contains('mesh-qty')) meshState.qty = $('meshQty').value;
+        if (e.target.classList.contains('parts-input')) {
+          PARTS.forEach(function (p) { partsState[p.key] = $(p.id).value; });
+        }
+        if (e.target.classList.contains('mesh-cut')) {
+          meshState.a = $('meshACut').value;
+          meshState.b = $('meshBCut').value;
+        }
+        if (e.target.classList.contains('fconst') || e.target.classList.contains('pnum') ||
+            e.target.classList.contains('mesh-cut') || e.target.classList.contains('parts-input')) recalc();
+      });
+      /* 失焦 / 回车时收敛数值：纱网数量 0–99、配件数量非负整数，避免界面残留非法值 */
+      document.addEventListener('change', function (e) {
+        if (e.target.classList.contains('mesh-qty')) {
+          var q = normQty($('meshQty').value);
+          $('meshQty').value = q === '' ? '' : String(q);
+          meshState.qty = $('meshQty').value;
+          recalc();
+          return;
+        }
+        if (e.target.classList.contains('parts-input')) {
+          PARTS.forEach(function (p) {
+            var el = $(p.id), v = normCount(el.value);
+            el.value = v === '' ? '' : String(v);
+            partsState[p.key] = el.value;
+          });
+          recalc();
+        }
+      });
+      $('autoS').addEventListener('change', recalc);
+
+      /* ================= 公式方案：下拉 / 新建 / 保存 / 删除 ================= */
+      function refreshSelect() {
+        var html = Object.keys(store.schemes).map(function (name) {
+          return '<option value="' + esc(name) + '"' + (name === store.active ? ' selected' : '') + '>' + esc(name) + '</option>';
+        }).join('');
+        $('formulaSel').innerHTML = html;
+        /* 「型材系列」与「请选择公式」共用同一份方案数据，双向同步 */
+        var ps = $('profileSel');
+        if (ps) { ps.innerHTML = html; ps.value = store.active; }
+      }
+      function collectConsts() {
+        var o = {};
+        document.querySelectorAll('.fconst').forEach(function (el) { o[el.dataset.key] = el.value.trim(); });
+        return o;
+      }
+      function applyScheme(name) {
+        store.active = name;
+        saveStore(store);
+        refreshSelect();
+        renderBoard();
+        recalc();
+      }
+      refreshSelect();
+
+      $('formulaSel').addEventListener('change', function () { applyScheme(this.value); });
+
+      $('btnNew').addEventListener('click', function () {
+        var name = window.prompt('请输入新公式方案名称：', '新窗型公式');
+        if (!name) return;
+        name = name.trim();
+        if (!name) return;
+        if (store.schemes[name]) { showToast('该名称已存在', 'error'); return; }
+        store.schemes[name] = collectConsts();
+        applyScheme(name);
+        showToast('已新建方案「' + name + '」');
+      });
+
+      $('btnSave').addEventListener('click', function () {
+        store.schemes[store.active] = collectConsts();
+        saveStore(store);
+        showToast('已保存「' + store.active + '」的公式数值');
+      });
+
+      $('btnDelete').addEventListener('click', function () {
+        var name = store.active;
+        if (BUILTIN[name]) { showToast('内置公式方案不可删除', 'error'); return; }
+        var keys = Object.keys(store.schemes);
+        if (keys.length <= 1) { showToast('至少保留一个公式方案', 'error'); return; }
+        if (!window.confirm('确定删除公式方案「' + name + '」吗？')) return;
+        delete store.schemes[name];
+        applyScheme(Object.keys(store.schemes)[0]);
+        showToast('已删除「' + name + '」');
+      });
+
+      /* ================= 复制结果 ================= */
+      $('btnCopy').addEventListener('click', function () {
+        var meta = [
+          '窗号=' + ($('pNo').value || '未填'),
+          '客户=' + ($('pCustomer').value || '未填'),
+          '电话=' + ($('pPhone').value || '未填'),
+          '备注=' + ($('pRemark').value || '未填'),
+          '型材系列=' + $('profileSel').value,
+          '高低扇=' + ($('highLow').checked ? '是' : '否'),
+          '窗型=' + winTypeCfg().label,
+          '窗型选择=' + (shapeState || '未选')
+        ];
+        if (fixedEnabled('down')) meta.push('下固定窗高=' + ($('pFD').value || '未填'));
+        if (fixedEnabled('up')) meta.push('上固定窗高=' + ($('pFU').value || '未填'));
+        var lines = ['下料计算结果（单位 mm）',
+          '宽=' + $('pW').value + '  高=' + $('pH').value + '  推窗高=' + $('pT').value + '  上下方=' + $('pS').value,
+          meta.join('  '), ''];
+        COLS.forEach(function (col, ci) {
+          lines.push('【' + col.g + '】');
+          document.querySelectorAll('.res-card')[ci].querySelectorAll('.res-row').forEach(function (r) {
+            lines.push('  ' + r.querySelector('.res-name').textContent.trim() + ' = ' + r.querySelector('.res-val').textContent.trim());
+          });
+          lines.push('');
+        });
+        var txt = lines.join('\n');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(txt).then(function () { showToast('结果已复制到剪贴板'); },
+            function () { fallbackCopy(txt); });
+        } else fallbackCopy(txt);
+      });
+      function fallbackCopy(txt) {
+        var ta = document.createElement('textarea');
+        ta.value = txt; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); showToast('结果已复制到剪贴板'); }
+        catch (e) { showToast('复制失败，请手动选择', 'error'); }
+        ta.remove();
+      }
+
+      /* ============================================================
+         打印表单（下料单）
+         1) 表格结构参照纸质下料单：客户窗号 / 订单编号 / 外框 / 内扇 /
+            电话 / 备注 + 窗型、尺寸、边封、中柱、光勾企、上下方、竖砂、
+            横砂、平方、玻璃等列；窗型单元格用【两固两开】文字表示
+         2) 数值全部来自当前计算参数 + 底部自动计算结果，不重复实现公式
+         3) 打开时生成一次，打印时 @media print 只输出本弹层内的纸张
+         ============================================================ */
+      var printModal = $('printModal');
+
+      /* 从底部结果区读取某条公式的计算值（含纱网 / 配件），保持与界面一致 */
+      function resNum(id) {
+        var el = document.querySelector('.res-row[data-rid="' + id + '"] .res-val');
+        if (!el || el.classList.contains('empty')) return null;
+        var n = parseFloat((el.textContent || '').replace(/[^\d.\-]/g, ''));
+        return isFinite(n) ? n : null;
+      }
+      function pVal(id) { return numOrNull($(id).value); }
+      function nTxt(v) { return v === null ? '—' : fmtVal(v); }
+      function pfLines(arr) {
+        return arr.map(function (s) { return '<span class="pf-line pf-num">' + s + '</span>'; }).join('');
+      }
+      function pfBlankRow(seq) {
+        var tds = '<td>' + seq + '</td>';
+        for (var i = 1; i < 12; i++) tds += '<td></td>';
+        return '<tr class="pf-blank">' + tds + '</tr>';
+      }
+      function pfOrderNo(areaTxt) {
+        var d = new Date(), pad2 = function (x) { return x < 10 ? '0' + x : '' + x; };
+        var day = String(d.getFullYear()) + pad2(d.getMonth() + 1) + pad2(d.getDate());
+        return '_' + store.active + '_' + day + '0001_' + areaTxt + '㎡';
+      }
+
+      function buildPrintPaper() {
+        var W = pVal('pW'), H = pVal('pH'), S = pVal('pS');
+        var a1 = resNum('a1'), a2 = resNum('a2'), a3 = resNum('a3'), a4 = resNum('a4');
+        var b1 = resNum('b1'), b2 = resNum('b2'), b3 = resNum('b3'), b4 = resNum('b4');
+        var c1 = resNum('c1'), c2 = resNum('c2'), c4 = resNum('c4'), c5 = resNum('c5');
+        var area = (W === null || H === null) ? null : Math.round(W * H / 1000000 * 100) / 100;
+        var areaTxt = area === null ? '—' : String(area);
+        var no = ($('pNo').value || '').trim() || '01';
+        var seq = parseInt(no, 10);
+        var blanks = isFinite(seq) ? [String(seq + 1), String(seq + 2)] : ['02', '03'];
+
+        /* 光勾企：内外值一致时合并为一个数，不同时用 / 并列 */
+        var ggq = (b1 !== null && b2 !== null && b1 !== b2) ? nTxt(b1) + '/' + nTxt(b2) : nTxt(b1);
+
+        /* 计算参数区的电话 / 备注同步到打印表单（空值留下划线供手写） */
+        var phone = ($('pPhone').value || '').trim();
+        var remark = ($('pRemark').value || '').trim();
+        var pfVal = function (v, blank) {
+          return v ? '<span class="pf-contact-val">' + esc(v) + '</span>'
+                   : '<span class="pf-contact-empty">' + blank + '</span>';
+        };
+        var contactCell = '<th colspan="3" class="pf-contact"><div class="pf-contact-in">' +
+          '<span class="pf-contact-item"><span class="pf-pink">电话：</span>' + pfVal(phone, '＿＿＿＿') + '</span>' +
+          '<span class="pf-contact-item"><span class="pf-pink">备注：</span>' + pfVal(remark, '＿＿＿＿＿＿') + '</span>' +
+        '</div></th>';
+
+        var cols = '<colgroup>' +
+          '<col class="c1"><col class="c2"><col class="c3"><col class="c4">' +
+          '<col class="c5"><col class="c6"><col class="c7"><col class="c8">' +
+          '<col class="c9"><col class="c10"><col class="c11"><col class="c12">' +
+          '</colgroup>';
+
+        var head = '<thead>' +
+          '<tr>' +
+            '<th class="pf-cust" rowspan="2">客户窗号</th>' +
+            '<th colspan="2"></th>' +
+            '<th class="pf-label">订单编号</th>' +
+            '<th colspan="2" class="pf-order-val">' + esc(pfOrderNo(areaTxt)) + '</th>' +
+            '<th class="pf-label pf-left">外框:</th>' +
+            '<th class="pf-label pf-left">内扇:</th>' +
+            '<th>·</th>' +
+            contactCell +
+          '</tr>' +
+          '<tr>' +
+            '<th>窗型</th><th>高 × 宽</th><th>边 封</th>' +
+            '<th>上 下 滑<br>上 固<br>上 滑</th>' +
+            '<th>中 柱<br>盖 板</th>' +
+            '<th>光 勾 企</th><th>上 下 方</th><th>竖 砂</th><th>横 砂</th><th>平 方</th><th>玻 璃</th>' +
+          '</tr>' +
+        '</thead>';
+
+        var body = '<tbody><tr>' +
+          '<td>' + esc(no) + '</td>' +
+          '<td class="pf-shape">【' + esc(shapeState || '未选') + '】</td>' +
+          '<td><span class="pf-line pf-dash">--------</span><span class="pf-line pf-num">' + nTxt(H) + 'x' + nTxt(W) + 'x1</span></td>' +
+          '<td class="pf-num">' + nTxt(a1) + ' x2</td>' +
+          '<td>' + pfLines([nTxt(a2) + ' x各1', nTxt(a2) + ' x1']) + '</td>' +
+          '<td>' + pfLines([nTxt(a3) + ' x1', nTxt(a4) + ' x2']) + '</td>' +
+          '<td class="pf-num">' + ggq + ' x各2</td>' +
+          '<td class="pf-num">' + nTxt(b4) + ' x各2</td>' +
+          '<td class="pf-num">' + nTxt(b3) + ' x2</td>' +
+          '<td class="pf-num">' + nTxt(S) + ' x2</td>' +
+          '<td class="pf-num">' + areaTxt + '</td>' +
+          '<td>' + pfLines([nTxt(c1) + 'x' + nTxt(c2) + ' x2', nTxt(c5) + 'x' + nTxt(c4) + ' x2']) + '</td>' +
+        '</tr>' + blanks.map(pfBlankRow).join('') + '</tbody>';
+
+        var meta = [
+          '客户：<b>' + esc(($('pCustomer').value || '').trim() || '未填') + '</b>',
+          '电话：<b>' + esc(phone || '未填') + '</b>',
+          '备注：<b>' + esc(remark || '未填') + '</b>',
+          '型材系列：<b>' + esc(store.active) + '</b>',
+          '窗型分类：<b>' + esc(winTypeCfg().label) + '</b>',
+          '高低扇：<b>' + ($('highLow').checked ? '是' : '否') + '</b>'
+        ];
+        if (fixedEnabled('down')) meta.push('下固定窗高：<b>' + esc($('pFD').value || '—') + '</b>');
+        if (fixedEnabled('up')) meta.push('上固定窗高：<b>' + esc($('pFU').value || '—') + '</b>');
+        var q = normQty(meshState.qty);
+        var pTotal = resNum('parts');
+        meta.push('纱网压边：<b>' + nTxt(resNum('mesh')) + ' mm²</b>');
+        meta.push('纱网数量：<b>' + (q === '' ? '未填' : q + ' 片') + '</b>');
+        meta.push('配件合计：<b>' + (pTotal === null ? '未填' : nTxt(pTotal) + ' 个') + '</b>');
+        meta.push('打印时间：<b>' + esc(new Date().toLocaleString('zh-CN', { hour12: false })) + '</b>');
+
+        $('printPaper').innerHTML = '<table class="pf-table">' + cols + head + body + '</table>' +
+          '<div class="pf-foot">' + meta.map(function (m) { return '<span>' + m + '</span>'; }).join('') + '</div>' +
+          '<div class="pf-tip">说明：蓝色数字取自系统自动计算结果，空白行供现场手工补录；点击右上角「打印」输出 A4 横向下料单。</div>';
+      }
+
+      function openPrintSheet() {
+        buildPrintPaper();
+        printModal.classList.add('is-open');
+        printModal.setAttribute('aria-hidden', 'false');
+      }
+      function closePrintSheet() {
+        printModal.classList.remove('is-open');
+        printModal.setAttribute('aria-hidden', 'true');
+      }
+      $('btnPrintForm').addEventListener('click', openPrintSheet);
+      $('btnDoPrint').addEventListener('click', function () { window.print(); });
+      $('btnClosePrint').addEventListener('click', closePrintSheet);
+      /* 直接用 Ctrl+P 打印时也能按最新参数生成表单 */
+      window.addEventListener('beforeprint', buildPrintPaper);
+      printModal.addEventListener('click', function (e) { if (e.target === printModal) closePrintSheet(); });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && printModal.classList.contains('is-open')) closePrintSheet();
+      });
+
+      recalc();
+    })();
+  </script>
+</body>
+
+</html>
