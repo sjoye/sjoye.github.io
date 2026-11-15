@@ -160,6 +160,13 @@
       font-variant-numeric: tabular-nums; transition: border-color .2s, box-shadow .2s;
     }
     .param .u { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+    /* 上下方：只读展示，按窗型自动取下方公式结果 */
+    .s-auto-val {
+      flex: 1; min-width: 0; padding: 8px 11px; border: 1px dashed var(--line-str);
+      border-radius: 7px; background: var(--sub); color: var(--accent);
+      font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums;
+    }
+    .param-s-auto .param-hint { color: var(--accent); }
     .param-auto { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 11.5px; color: var(--muted); cursor: pointer; user-select: none; }
     .param-auto input { accent-color: var(--accent); cursor: pointer; }
 
@@ -346,13 +353,15 @@
       select { min-width: 150px; }
     }
 
-    /* ================= 打印表单：预览弹层 + A4 横向打印 ================= */
-    .print-modal {
-      display: none; position: fixed; inset: 0; z-index: 300;
-      background: rgba(22, 25, 43, .62); overflow: auto; padding: 26px 18px 40px;
-    }
-    .print-modal.is-open { display: block; }
+    /* ================= 打印表单：header 下方常驻实时预览 + A4 横向打印 ================= */
+    .print-live { max-width: 1560px; margin: 18px auto 0; padding: 0 22px; }
     .print-dialog { width: min(1180px, 100%); margin: 0 auto; }
+    .pf-live {
+      display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 20px;
+      font-size: 9.5px; font-weight: 700; letter-spacing: 1px; vertical-align: 2px;
+      color: #1f7a49; background: #eaf9f0; border: 1px solid #c8efda;
+    }
+    [data-theme="dark"] .pf-live { color: #8fe3ac; background: #1b3a2d; border-color: #2d6b4f; }
     .pf-bar {
       display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
       background: var(--card); border: 1px solid var(--line); border-radius: 10px;
@@ -411,13 +420,14 @@
     @page { size: A4 landscape; margin: 8mm; }
     @media print {
       html, body { background: #fff !important; color: #111 !important; padding: 0 !important; }
-      body > *:not(#printModal) { display: none !important; }
-      html.demo-expired #printModal { display: none !important; }
-      #printModal {
-        display: block !important; position: static !important; inset: auto !important;
-        background: none !important; padding: 0 !important; overflow: visible !important;
+      /* 纸张已常驻页面，打印时只保留 #printSheet，隐藏顶栏 / 参数区 / 结果区 / 提示条 */
+      body > *:not(#printSheet) { display: none !important; }
+      html.demo-expired #printSheet { display: none !important; }
+      #printSheet {
+        display: block !important; max-width: none !important;
+        margin: 0 !important; padding: 0 !important;
       }
-      .print-dialog { width: 100% !important; }
+      .print-dialog { width: 100% !important; margin: 0 !important; }
       .pf-bar, .pf-tip { display: none !important; }
       .print-paper { box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; }
       .pf-table th, .pf-table td, .pf-num, .pf-pink { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -577,6 +587,22 @@
     </div>
   </header>
 
+  <!-- ================= 打印表单：常驻在 header 下方，随参数实时刷新；打印时只输出本块 ================= -->
+  <section class="print-live" id="printSheet" aria-label="下料单实时打印预览">
+    <div class="print-dialog">
+      <div class="pf-bar">
+        <div>
+          <h3>下料单 · 实时打印预览 <span class="pf-live">LIVE</span></h3>
+          <p>A4 横向 · 数值随计算参数与底部结果自动刷新 · 窗型以文字表示 · 空白行供现场手工补录</p>
+        </div>
+        <div class="pf-bar-actions">
+          <button class="btn btn-primary" id="btnDoPrint">打印此表</button>
+        </div>
+      </div>
+      <div class="print-paper" id="printPaper"></div>
+    </div>
+  </section>
+
   <div class="wrap">
 
     <!-- ================= 工具栏（设计图顶部） ================= -->
@@ -594,7 +620,7 @@
           <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
           <span id="toggleParamsText">收起计算参数</span>
         </button>
-        <button class="btn btn-print" id="btnPrintForm" title="打开下料单打印预览">
+        <button class="btn btn-print" id="btnPrintForm" title="直接打印下料单（A4 横向）">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
             <path d="M6 14h12v7H6z"/><path d="M18 12h.01"/>
@@ -611,7 +637,7 @@
     <section class="params">
       <div class="params-head">
         <h2>计算参数 · 窗参数</h2>
-        <span>窗尺寸 / 单位：mm 毫米 · 公式中的「宽 / 高 / 推窗高 / 上下方」取自此处，输入后下方所有公式自动求值</span>
+        <span>窗尺寸 / 单位：mm 毫米 · 公式中的「宽 / 高 / 推窗高」取自此处；「上下方」按窗型自动取下方对应公式结果</span>
       </div>
 
       <!-- 顶部：高低扇 / 客户 / 型材系列 -->
@@ -626,8 +652,12 @@
         <label class="meta-field"><span>型材系列：</span><select id="profileSel"></select></label>
       </div>
 
-      <!-- 尺寸参数：截图 6 项 + 公式所需的「上下方」 -->
+      <!-- 尺寸参数：窗个数 + 截图 6 项 + 公式所需的「上下方」 -->
       <div class="param-grid">
+        <div class="param">
+          <label>窗个数 <em>WINDOW COUNT</em></label>
+          <div class="pwrap"><input class="pnum" id="pQty" type="number" value="1" min="1" max="99" step="1" inputmode="numeric" /><span class="u">个</span></div>
+        </div>
         <div class="param">
           <label>窗号 <em>WINDOW NO.</em></label>
           <div class="pwrap"><input class="ptxt" id="pNo" type="text" placeholder="如 W-001" /></div>
@@ -644,10 +674,11 @@
           <label>推窗高 <em>SASH HEIGHT</em></label>
           <div class="pwrap"><input class="pnum" id="pT" type="number" value="1200" min="0" step="1" /><span class="u">mm</span></div>
         </div>
-        <div class="param">
-          <label>上下方 <em>TRANSOM</em></label>
-          <div class="pwrap"><input class="pnum" id="pS" type="number" value="700" min="0" step="1" /><span class="u">mm</span></div>
-          <label class="param-auto"><input type="checkbox" id="autoS" /> 自动取「两固上下方」计算结果</label>
+        <div class="param param-s-auto">
+          <label>上下方 <em>TRANSOM · 自动</em></label>
+          <div class="pwrap"><span class="s-auto-val" id="pSView">—</span><span class="u">mm</span></div>
+          <div class="param-hint" id="sHint">按窗型自动取下方公式结果</div>
+          <input id="pS" type="hidden" />
         </div>
         <div class="param fixed-param" id="paramFixedDown">
           <label>下固定窗高 <em>LOWER FIXED</em></label>
@@ -713,23 +744,6 @@
   </div>
 
   <div class="toast-container" id="toastContainer"></div>
-
-  <!-- ================= 打印表单预览（工具栏「打印表单」按钮打开，打印时只输出本块） ================= -->
-  <div class="print-modal" id="printModal" aria-hidden="true">
-    <div class="print-dialog">
-      <div class="pf-bar">
-        <div>
-          <h3>下料单 · 打印预览</h3>
-          <p>A4 横向 · 数值取自当前计算参数与底部自动计算结果 · 窗型以文字表示 · 可在空白处手工补录</p>
-        </div>
-        <div class="pf-bar-actions">
-          <button class="btn btn-primary" id="btnDoPrint">打印</button>
-          <button class="btn" id="btnClosePrint">关闭</button>
-        </div>
-      </div>
-      <div class="print-paper" id="printPaper"></div>
-    </div>
-  </div>
 
   <!-- ==================================================================
        公式方案数据（JSON 统一数据源）
@@ -801,7 +815,7 @@
       }
     },
     {
-      "name": "广赞高轨道",
+      "name": "888广赞高轨道",
       "c": {
         "a2": 30, "a3": 25, "a4": 25, "a5": "", "a6": "", "a7": "", "a8": "",
         "b1": 65, "b2": 65, "b3": 65, "b4": 136, "b5": 165, "b6": 242, "b7": 65,
@@ -1123,6 +1137,7 @@
             l.classList.toggle('is-checked', l.querySelector('input').checked);
           });
           updateShapeState();
+          recalc();
           return;
         }
         if (e.target.id === 'profileSel') applyScheme(e.target.value);
@@ -1140,6 +1155,21 @@
         return out;
       }
       var ROWS = allRows();
+
+      /* 上下方自动取值：按窗型文字判断固数，三固→b5、四固→b6、其余（两固/一固/拼窗/无搓头）→b4
+         b4/b5/b6 均为 (宽−X)/2、/3、/4，只依赖 W 与常量，可用 S=0 单独先算，避免循环依赖 */
+      function sFormulaId() {
+        var s = shapeState || '';
+        if (/四固/.test(s)) return 'b6';
+        if (/三固/.test(s)) return 'b5';
+        return 'b4';
+      }
+      function sFormulaRow() {
+        var id = sFormulaId(), i;
+        for (i = 0; i < ROWS.length; i++) if (ROWS[i].row.id === id) return ROWS[i].row;
+        for (i = 0; i < ROWS.length; i++) if (ROWS[i].row.id === 'b4') return ROWS[i].row;
+        return null;
+      }
 
       /* ================= 纱网自动计算（规则统一存于 #formulaData 的 mesh 节点） =================
          ref = 'S' 取基础参数「上下方」；其余为公式行 id（b1 / b3 / b7 …）的计算结果。
@@ -1248,19 +1278,16 @@
       }
 
       function recalc() {
-        var V = { W: pnum('pW'), H: pnum('pH'), T: pnum('pT'), S: pnum('pS') };
+        var V = { W: pnum('pW'), H: pnum('pH'), T: pnum('pT'), S: null };
 
-        /* 上下方自动取「两固上下方」结果，避免循环依赖，单独先算 */
-        if ($('autoS').checked) {
-          var b4 = null;
-          for (var i = 0; i < ROWS.length; i++) if (ROWS[i].row.id === 'b4') { b4 = ROWS[i].row; break; }
-          var r = evalRow(b4, { W: V.W, H: V.H, T: V.T, S: 0 });
-          V.S = r.value;
-          $('pS').value = r.value === null ? '' : String(Math.round(r.value * 100) / 100);
-          $('pS').disabled = true;
-        } else {
-          $('pS').disabled = false;
-        }
+        /* 上下方 S 取消手工填写：按当前窗型自动取对应公式结果（两固 b4 / 三固 b5 / 四固 b6）
+           这几行只依赖宽 W 与常量，用 S=0 先算，避免与依赖 S 的公式循环依赖 */
+        var sRow = sFormulaRow();
+        var sRes = evalRow(sRow, { W: V.W, H: V.H, T: V.T, S: 0 });
+        V.S = sRes.value === null ? null : Math.round(sRes.value * 100) / 100;
+        $('pS').value = V.S === null ? '' : String(V.S);
+        $('pSView').textContent = V.S === null ? '待填' : fmtVal(V.S);
+        $('sHint').textContent = '自动取「' + sRow.n + '」（窗型：' + (shapeState || '未选') + '）';
 
         var computed = 0, missing = 0;
         var byCol = {}, valueMap = {};
@@ -1365,6 +1392,8 @@
           if (col.mesh) body += meshResHtml(mesh);
           return '<div class="res-card"><h3>' + esc(col.g) + '</h3>' + body + '</div>';
         }).join('');
+        /* 结果区刚刷新完：重建 header 下方的实时打印预览 */
+        schedulePrint();
       }
 
       /* ================= 收起 / 展开公式参数区（4 个设置区块） ================= */
@@ -1423,6 +1452,8 @@
 
       /* ================= 事件绑定：任一输入变化即重算 ================= */
       document.addEventListener('input', function (e) {
+        /* 电话 / 备注 / 客户 / 窗号 / 窗个数等只影响打印内容的字段，也要实时刷新预览 */
+        schedulePrint();
         if (e.target.classList.contains('mesh-qty')) meshState.qty = $('meshQty').value;
         if (e.target.classList.contains('parts-input')) {
           PARTS.forEach(function (p) { partsState[p.key] = $(p.id).value; });
@@ -1436,6 +1467,8 @@
       });
       /* 失焦 / 回车时收敛数值：纱网数量 0–99、配件数量非负整数，避免界面残留非法值 */
       document.addEventListener('change', function (e) {
+        /* radio / select / 归一化后的数值变化同样触发预览刷新 */
+        schedulePrint();
         if (e.target.classList.contains('mesh-qty')) {
           var q = normQty($('meshQty').value);
           $('meshQty').value = q === '' ? '' : String(q);
@@ -1452,7 +1485,18 @@
           recalc();
         }
       });
-      $('autoS').addEventListener('change', recalc);
+      /* 上下方已改为按窗型全自动计算，不再需要 autoS 复选框 */
+
+      /* 窗个数：订单信息项，1–99 整数，不参与公式求值 */
+      function normWinCount(raw) {
+        var s = String(raw == null ? '' : raw).trim();
+        if (s === '') return 1;
+        var n = Math.round(Number(s));
+        if (!isFinite(n) || n < 1) return 1;
+        return Math.min(99, n);
+      }
+      function winCount() { return normWinCount($('pQty').value); }
+      $('pQty').addEventListener('change', function () { this.value = String(winCount()); });
 
       /* ================= 公式方案：下拉 / 新建 / 保存 / 删除 ================= */
       function refreshSelect() {
@@ -1512,6 +1556,7 @@
       $('btnCopy').addEventListener('click', function () {
         var meta = [
           '窗号=' + ($('pNo').value || '未填'),
+          '窗个数=' + winCount() + ' 个',
           '客户=' + ($('pCustomer').value || '未填'),
           '电话=' + ($('pPhone').value || '未填'),
           '备注=' + ($('pRemark').value || '未填'),
@@ -1552,9 +1597,14 @@
             电话 / 备注 + 窗型、尺寸、边封、中柱、光勾企、上下方、竖砂、
             横砂、平方、玻璃等列；窗型单元格用【两固两开】文字表示
          2) 数值全部来自当前计算参数 + 底部自动计算结果，不重复实现公式
-         3) 打开时生成一次，打印时 @media print 只输出本弹层内的纸张
+         3) 预览常驻于 header 下方，任一参数 / 公式 / 方案变化后 60ms 内自动重建，
+           打印时 @media print 只输出本区块内的纸张
          ============================================================ */
-      var printModal = $('printModal');
+      var pfTimer = null;
+      function schedulePrint() {
+        if (pfTimer) clearTimeout(pfTimer);
+        pfTimer = setTimeout(function () { pfTimer = null; buildPrintPaper(); }, 60);
+      }
 
       /* 从底部结果区读取某条公式的计算值（含纱网 / 配件），保持与界面一致 */
       function resNum(id) {
@@ -1582,7 +1632,7 @@
       function buildPrintPaper() {
         var W = pVal('pW'), H = pVal('pH'), S = pVal('pS');
         var a1 = resNum('a1'), a2 = resNum('a2'), a3 = resNum('a3'), a4 = resNum('a4');
-        var b1 = resNum('b1'), b2 = resNum('b2'), b3 = resNum('b3'), b4 = resNum('b4');
+        var b1 = resNum('b1'), b2 = resNum('b2'), b3 = resNum('b3');
         var c1 = resNum('c1'), c2 = resNum('c2'), c4 = resNum('c4'), c5 = resNum('c5');
         var area = (W === null || H === null) ? null : Math.round(W * H / 1000000 * 100) / 100;
         var areaTxt = area === null ? '—' : String(area);
@@ -1633,12 +1683,12 @@
         var body = '<tbody><tr>' +
           '<td>' + esc(no) + '</td>' +
           '<td class="pf-shape">【' + esc(shapeState || '未选') + '】</td>' +
-          '<td><span class="pf-line pf-dash">--------</span><span class="pf-line pf-num">' + nTxt(H) + 'x' + nTxt(W) + 'x1</span></td>' +
+          '<td><span class="pf-line pf-dash">--------</span><span class="pf-line pf-num">' + nTxt(H) + 'x' + nTxt(W) + 'x' + winCount() + '</span></td>' +
           '<td class="pf-num">' + nTxt(a1) + ' x2</td>' +
           '<td>' + pfLines([nTxt(a2) + ' x各1', nTxt(a2) + ' x1']) + '</td>' +
           '<td>' + pfLines([nTxt(a3) + ' x1', nTxt(a4) + ' x2']) + '</td>' +
           '<td class="pf-num">' + ggq + ' x各2</td>' +
-          '<td class="pf-num">' + nTxt(b4) + ' x各2</td>' +
+          '<td class="pf-num">' + nTxt(S) + ' x各2</td>' +
           '<td class="pf-num">' + nTxt(b3) + ' x2</td>' +
           '<td class="pf-num">' + nTxt(S) + ' x2</td>' +
           '<td class="pf-num">' + areaTxt + '</td>' +
@@ -1646,6 +1696,7 @@
         '</tr>' + blanks.map(pfBlankRow).join('') + '</tbody>';
 
         var meta = [
+          '窗个数：<b>' + winCount() + ' 个</b>',
           '客户：<b>' + esc(($('pCustomer').value || '').trim() || '未填') + '</b>',
           '电话：<b>' + esc(phone || '未填') + '</b>',
           '备注：<b>' + esc(remark || '未填') + '</b>',
@@ -1664,29 +1715,27 @@
 
         $('printPaper').innerHTML = '<table class="pf-table">' + cols + head + body + '</table>' +
           '<div class="pf-foot">' + meta.map(function (m) { return '<span>' + m + '</span>'; }).join('') + '</div>' +
-          '<div class="pf-tip">说明：蓝色数字取自系统自动计算结果，空白行供现场手工补录；点击右上角「打印」输出 A4 横向下料单。</div>';
+          '<div class="pf-tip">说明：蓝色数字取自系统自动计算结果，空白行供现场手工补录；点击工具栏「打印表单」或右上角「打印此表」输出 A4 横向下料单。</div>';
       }
 
-      function openPrintSheet() {
+      /* 工具栏「打印表单」= 直接调用浏览器打印；纸张已常驻并实时刷新，不再需要弹层 */
+      function printNow() {
+        if (pfTimer) { clearTimeout(pfTimer); pfTimer = null; }
+        buildPrintPaper();          /* 先同步刷新一次，避免刚改完参数就点打印拿到 60ms 前的旧值 */
+        window.print();
+      }
+      $('btnPrintForm').addEventListener('click', printNow);
+      /* 预览条上的便捷打印入口 */
+      $('btnDoPrint').addEventListener('click', printNow);
+      /* 直接 Ctrl+P 或系统打印时，先清掉防抖并同步生成一次，确保输出最新参数 */
+      window.addEventListener('beforeprint', function () {
+        if (pfTimer) { clearTimeout(pfTimer); pfTimer = null; }
         buildPrintPaper();
-        printModal.classList.add('is-open');
-        printModal.setAttribute('aria-hidden', 'false');
-      }
-      function closePrintSheet() {
-        printModal.classList.remove('is-open');
-        printModal.setAttribute('aria-hidden', 'true');
-      }
-      $('btnPrintForm').addEventListener('click', openPrintSheet);
-      $('btnDoPrint').addEventListener('click', function () { window.print(); });
-      $('btnClosePrint').addEventListener('click', closePrintSheet);
-      /* 直接用 Ctrl+P 打印时也能按最新参数生成表单 */
-      window.addEventListener('beforeprint', buildPrintPaper);
-      printModal.addEventListener('click', function (e) { if (e.target === printModal) closePrintSheet(); });
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && printModal.classList.contains('is-open')) closePrintSheet();
       });
 
       recalc();
+      if (pfTimer) { clearTimeout(pfTimer); pfTimer = null; }
+      buildPrintPaper(); /* 首屏立即出表，不等 60ms 防抖 */
     })();
   </script>
 </body>
