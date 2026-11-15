@@ -128,11 +128,12 @@
     .btn-toggle.is-collapsed .chev { transform: rotate(180deg); }
 
     /* 打印表单按钮 */
-    .btn-print { display: inline-flex; align-items: center; gap: 7px; }
-    .btn-print svg {
+    .btn-print, .btn-export { display: inline-flex; align-items: center; gap: 7px; }
+    .btn-print svg, .btn-export svg {
       width: 15px; height: 15px; flex-shrink: 0;
       fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
     }
+    .btn-export { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
 
     /* ================= 基础参数 ================= */
     /* 计算参数区收起动画：与 #boardWrap 同一套 max-height 过渡，间距放在外层以免收起后留空白 */
@@ -331,6 +332,16 @@
     .res-val.empty { color: var(--dim); font-size: 13px; font-weight: 600; }
     .res-expr { grid-column: 1 / -1; font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: .2px; }
     .res-unit { font-size: 10px; color: var(--muted); font-weight: 600; margin-left: 2px; }
+    /* 当前窗型生效的固玻宽：结果区高亮，伪元素不进 textContent，不影响复制结果 */
+    .res-row.is-glass-active .res-name { color: var(--accent); font-weight: 700; }
+    .res-row.is-glass-active .res-name::after {
+      content: '当前窗型'; display: inline-block; margin-left: 7px; padding: 1px 6px;
+      border-radius: 20px; font-size: 9px; font-weight: 700; letter-spacing: .5px; vertical-align: 1px;
+      color: #1f7a49; background: #eaf9f0; border: 1px solid #c8efda;
+    }
+    [data-theme="dark"] .res-row.is-glass-active .res-name::after {
+      color: #8fe3ac; background: #1b3a2d; border-color: #2d6b4f;
+    }
     .res-actions { display: flex; gap: 8px; }
 
     .foot-note { text-align: center; font-size: 11px; color: var(--dim); margin-top: 22px; letter-spacing: .5px; }
@@ -628,6 +639,12 @@
           <span>打印表单</span>
         </button>
         <button class="btn btn-danger" id="btnDelete">删除</button>
+        <button class="btn btn-export" id="btnExport" title="把当前公式方案导出为 JSON 片段并自动复制到剪贴板">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/>
+          </svg>
+          <span>DATA</span>
+        </button>
       </div>
       <div class="unit-note">计量单位全部为：<b>mm / 毫米</b> · 修改任一数值，页面底部结果自动重算</div>
     </section>
@@ -784,7 +801,17 @@
       "一固两开", "两固三开", "两固四开",
       "两固两开", "三固三开", "三固四开",
       "三固两开", "", "四固四开"
-    ]
+    ],
+    "glass": {
+      "title": "固玻宽按窗型自动选择",
+      "rules": [
+        { "key": "一固", "id": "c5", "name": "一固固玻宽" },
+        { "key": "两固", "id": "c6", "name": "两固固玻宽" },
+        { "key": "三固", "id": "c7", "name": "三固固玻宽" },
+        { "key": "四固", "id": "c8", "name": "四固固玻宽" }
+      ],
+      "default": "c6"
+    }
   },
   "schemes": [
     {
@@ -1171,6 +1198,23 @@
         return null;
       }
 
+      /* 玻璃固玻宽按窗型自动选择：一固→c5、两固→c6、三固→c7、四固→c8，
+         窗型文字里没有「X固」的（如「无搓头…」）走 shapes.glass.default（默认两固 c6）。
+         映射规则统一放在 #formulaData.shapes.glass，后期新增固数只改 JSON，不用动 JS。 */
+      function glassWidthId() {
+        var cfg = (BASE.shapes && BASE.shapes.glass) || {};
+        var list = cfg.rules || [], s = String(shapeState || ''), i;
+        for (i = 0; i < list.length; i++) {
+          if (list[i].key && s.indexOf(list[i].key) >= 0) return list[i].id;
+        }
+        return cfg.default || 'c6';
+      }
+      function glassWidthRow() {
+        var id = glassWidthId(), i;
+        for (i = 0; i < ROWS.length; i++) if (ROWS[i].row.id === id) return ROWS[i].row;
+        return null;
+      }
+
       /* ================= 纱网自动计算（规则统一存于 #formulaData 的 mesh 节点） =================
          ref = 'S' 取基础参数「上下方」；其余为公式行 id（b1 / b3 / b7 …）的计算结果。
          下拉方案名命中 mesh.match（默认 888）时用 special 规则，其余用 default 规则。 */
@@ -1373,6 +1417,8 @@
           (missing ? '<span class="pill warn">待填 ' + missing + ' 项</span>' : '') +
           '<span class="pill">共 ' + ROWS.length + ' 条公式</span>';
 
+        /* 高亮当前窗型生效的那条固玻宽，便于核对玻璃取的是哪个公式 */
+        var activeGlassId = glassWidthId();
         $('resGrid').innerHTML = COLS.map(function (col, ci) {
           var box = byCol[ci];
           if (!box) return '';
@@ -1380,7 +1426,7 @@
             return (secName ? '<div class="res-sec">' + esc(secName) + '</div>' : '') +
               box.map[secName].map(function (it) {
                 var v = it.res.value;
-                return '<div class="res-row" data-rid="' + it.row.id + '">' +
+                return '<div class="res-row' + (it.row.id === activeGlassId ? ' is-glass-active' : '') + '" data-rid="' + it.row.id + '">' +
                   '<span class="res-name">' + esc(it.row.n) + '</span>' +
                   '<span class="res-val' + (v === null ? ' empty' : '') + '">' + fmtVal(v) +
                   (v === null ? '' : '<span class="res-unit">mm</span>') + '</span>' +
@@ -1578,18 +1624,61 @@
           lines.push('');
         });
         var txt = lines.join('\n');
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(txt).then(function () { showToast('结果已复制到剪贴板'); },
-            function () { fallbackCopy(txt); });
-        } else fallbackCopy(txt);
+        copyAny(txt);
       });
-      function fallbackCopy(txt) {
+      /* 通用复制：clipboard API 优先，失败回退 execCommand；okMsg 可自定义成功提示 */
+      function copyAny(txt, okMsg) {
+        var msg = okMsg || '结果已复制到剪贴板';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(txt).then(function () { showToast(msg); },
+            function () { fallbackCopy(txt, msg); });
+        } else fallbackCopy(txt, msg);
+      }
+      function fallbackCopy(txt, okMsg) {
         var ta = document.createElement('textarea');
         ta.value = txt; document.body.appendChild(ta); ta.select();
-        try { document.execCommand('copy'); showToast('结果已复制到剪贴板'); }
+        try { document.execCommand('copy'); showToast(okMsg || '结果已复制到剪贴板'); }
         catch (e) { showToast('复制失败，请手动选择', 'error'); }
         ta.remove();
       }
+
+      /* ================= 导出当前公式方案为可粘贴的 JSON 片段 =================
+         取界面上全部 .fconst 常量输入框的「当前值」（包括未点保存的修改），
+         按 a/b/c/d 分组拼成 #formulaData.schemes 的数组元素，末尾带逗号，
+         生成后直接复制到剪贴板，方便把新建方案固化进代码里的 JSON。 */
+      function schemeExportText() {
+        var name = String(store.active || '').trim() || '新窗型公式';
+        var groups = {}, order = [], seen = {}, count = 0;
+        document.querySelectorAll('.fconst').forEach(function (el) {
+          var raw = String(el.dataset.key || '');
+          var base = raw.replace(/_\d+$/, '');          /* a2_0 → a2 */
+          if (!base) return;
+          var key = seen[base] ? raw : base;            /* 同一行若有多个常量框则保留后缀，避免键冲突 */
+          seen[base] = true;
+          var g = key.charAt(0);
+          if (!groups[g]) { groups[g] = []; order.push(g); }
+          var v = String(el.value || '').trim();
+          /* 空值 / 非法数字保留字符串，合法数字转成数值类型，与内置 JSON 写法一致 */
+          var token = (v === '' || !isFinite(Number(v))) ? JSON.stringify(v) : String(Number(v));
+          groups[g].push(JSON.stringify(key) + ': ' + token);
+          count++;
+        });
+        var lines = order.map(function (g, i) {
+          return '        ' + groups[g].join(', ') + (i < order.length - 1 ? ',' : '');
+        });
+        return {
+          text: '    {\n' +
+                '      "name": ' + JSON.stringify(name) + ',\n' +
+                '      "c": {\n' + lines.join('\n') + '\n' +
+                '      }\n' +
+                '    },',
+          name: name, count: count
+        };
+      }
+      $('btnExport').addEventListener('click', function () {
+        var e = schemeExportText();
+        copyAny(e.text, '已导出「' + e.name + '」' + e.count + ' 项常量，可直接粘贴到 schemes 数组');
+      });
 
       /* ============================================================
          打印表单（下料单）
@@ -1633,7 +1722,10 @@
         var W = pVal('pW'), H = pVal('pH'), S = pVal('pS');
         var a1 = resNum('a1'), a2 = resNum('a2'), a3 = resNum('a3'), a4 = resNum('a4');
         var b1 = resNum('b1'), b2 = resNum('b2'), b3 = resNum('b3');
-        var c1 = resNum('c1'), c2 = resNum('c2'), c4 = resNum('c4'), c5 = resNum('c5');
+        var c1 = resNum('c1'), c2 = resNum('c2'), c4 = resNum('c4');
+        /* 固玻宽不再写死 c5：按当前窗型选 c5/c6/c7/c8（一固/两固/三固/四固） */
+        var gId = glassWidthId(), gRow = glassWidthRow();
+        var gW = resNum(gId), gName = gRow ? gRow.n : gId;
         var area = (W === null || H === null) ? null : Math.round(W * H / 1000000 * 100) / 100;
         var areaTxt = area === null ? '—' : String(area);
         var no = ($('pNo').value || '').trim() || '01';
@@ -1692,7 +1784,7 @@
           '<td class="pf-num">' + nTxt(b3) + ' x2</td>' +
           '<td class="pf-num">' + nTxt(S) + ' x2</td>' +
           '<td class="pf-num">' + areaTxt + '</td>' +
-          '<td>' + pfLines([nTxt(c1) + 'x' + nTxt(c2) + ' x2', nTxt(c5) + 'x' + nTxt(c4) + ' x2']) + '</td>' +
+          '<td>' + pfLines([nTxt(c1) + 'x' + nTxt(c2) + ' x2', nTxt(gW) + 'x' + nTxt(c4) + ' x2']) + '</td>' +
         '</tr>' + blanks.map(pfBlankRow).join('') + '</tbody>';
 
         var meta = [
@@ -1711,6 +1803,7 @@
         meta.push('纱网压边：<b>' + nTxt(resNum('mesh')) + ' mm²</b>');
         meta.push('纱网数量：<b>' + (q === '' ? '未填' : q + ' 片') + '</b>');
         meta.push('配件合计：<b>' + (pTotal === null ? '未填' : nTxt(pTotal) + ' 个') + '</b>');
+        meta.push('玻璃固玻宽：<b>' + esc(gName) + '（' + esc(gId) + '）</b>');
         meta.push('打印时间：<b>' + esc(new Date().toLocaleString('zh-CN', { hour12: false })) + '</b>');
 
         $('printPaper').innerHTML = '<table class="pf-table">' + cols + head + body + '</table>' +
