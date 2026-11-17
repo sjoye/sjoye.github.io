@@ -500,8 +500,10 @@
       'use strict';
 
       var CFG = {
-        year: 2026,                    // 限定年份；改成 null 表示每年以下两天都能演示
-        allow: [[11, 14], [11, 15]]    // 允许的日期 [月, 日]
+        year: 2026,                    // 限定年份；改成 null 表示每年以下日期都能演示
+        /* 允许的日期 [月, 日]：演示期 11 / 14 — 11 / 19（含 19 号当天），
+           11 / 20 起整页显示「项目体验到期」。要再延期，往下补 [11, 20] 即可。 */
+        allow: [[11, 14], [11, 15], [11, 16], [11, 17], [11, 18], [11, 19]]
       };
 
       function allowed(d) {
@@ -531,7 +533,10 @@
             '</div>' +
             '<h2>项目体验到期</h2>' +
             '<p>当前日期不在演示有效期内，请联系项目负责人获取新版演示链接。</p>' +
-            '<div class="demo-lock-range">演示有效期 ' + (CFG.year || '每年') + ' / 11 / 14 — 11 / 15</div>' +
+            /* 起止日期由 allow 首尾自动生成，延期时无需再改这行文案 */
+            '<div class="demo-lock-range">演示有效期 ' + (CFG.year || '每年') + ' / ' +
+              pad(CFG.allow[0][0]) + ' / ' + pad(CFG.allow[0][1]) + ' — ' +
+              pad(CFG.allow[CFG.allow.length - 1][0]) + ' / ' + pad(CFG.allow[CFG.allow.length - 1][1]) + '</div>' +
             '<div class="demo-lock-now">本机日期 ' + d.getFullYear() + ' / ' + pad(d.getMonth() + 1) + ' / ' + pad(d.getDate()) + '</div>' +
           '</div>';
         document.body.appendChild(lock);
@@ -1722,6 +1727,9 @@
         var W = pVal('pW'), H = pVal('pH'), S = pVal('pS');
         var a1 = resNum('a1'), a2 = resNum('a2'), a3 = resNum('a3'), a4 = resNum('a4');
         var b1 = resNum('b1'), b2 = resNum('b2'), b3 = resNum('b3');
+        /* 横纱 = 上下方 + 常量（公式行 b7），打印表单必须取公式结果，不能直接取 S */
+        var b7 = resNum('b7');
+        var hs = (b7 === null ? S : b7);   /* 方案未填 b7 常量时保持旧行为，用上下方兜底 */
         var c1 = resNum('c1'), c2 = resNum('c2'), c4 = resNum('c4');
         /* 固玻宽不再写死 c5：按当前窗型选 c5/c6/c7/c8（一固/两固/三固/四固） */
         var gId = glassWidthId(), gRow = glassWidthRow();
@@ -1782,7 +1790,7 @@
           '<td class="pf-num">' + ggq + ' x各2</td>' +
           '<td class="pf-num">' + nTxt(S) + ' x各2</td>' +
           '<td class="pf-num">' + nTxt(b3) + ' x2</td>' +
-          '<td class="pf-num">' + nTxt(S) + ' x2</td>' +
+          '<td class="pf-num">' + nTxt(hs) + ' x2</td>' +
           '<td class="pf-num">' + areaTxt + '</td>' +
           '<td>' + pfLines([nTxt(c1) + 'x' + nTxt(c2) + ' x2', nTxt(gW) + 'x' + nTxt(c4) + ' x2']) + '</td>' +
         '</tr>' + blanks.map(pfBlankRow).join('') + '</tbody>';
@@ -1804,6 +1812,9 @@
         meta.push('纱网数量：<b>' + (q === '' ? '未填' : q + ' 片') + '</b>');
         meta.push('配件合计：<b>' + (pTotal === null ? '未填' : nTxt(pTotal) + ' 个') + '</b>');
         meta.push('玻璃固玻宽：<b>' + esc(gName) + '（' + esc(gId) + '）</b>');
+        meta.push('横纱：<b>' + (b7 === null
+          ? '常量未填，暂用上下方 ' + nTxt(S) + ' mm'
+          : nTxt(b7) + ' mm（上下方 ' + nTxt(S) + ' + 常量）') + '</b>');
         meta.push('打印时间：<b>' + esc(new Date().toLocaleString('zh-CN', { hour12: false })) + '</b>');
 
         $('printPaper').innerHTML = '<table class="pf-table">' + cols + head + body + '</table>' +
