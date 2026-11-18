@@ -424,6 +424,8 @@
     .pf-table td.pf-shape { font-size: 11.5px; font-weight: 700; color: #111; white-space: nowrap; }
     /* 纱网尺寸 A X B：蓝色加粗，略缩字号保证 13 列下不换行；同样需带 td 提升优先级 */
     .pf-table td.pf-mesh { font-size: 11px; color: #1a4fa0; font-weight: 700; white-space: nowrap; letter-spacing: -.2px; }
+    /* 纱网尺寸下方的小号片数（xN），与尺寸本身区分 */
+    .pf-table td.pf-mesh .pf-mesh-qty { font-size: 10px; color: #555; font-weight: 600; letter-spacing: 0; }
     .pf-dash { color: #666; letter-spacing: 1px; font-size: 11px; }
     .pf-line { display: block; }
     .pf-foot {
@@ -807,7 +809,7 @@
     "default": "两固两开",
     "options": [
       "", "拼窗一固两开x2", "拼窗两固两开x2",
-      "无搓头两开", "无搓头三开", "无搓头四开",
+      "无摇头两开", "无摇头三开", "无摇头四开",
       "一固两开", "两固三开", "两固四开",
       "两固两开", "三固三开", "三固四开",
       "三固两开", "", "四固四开"
@@ -830,10 +832,27 @@
     },
     "pillarQty": {
       "title": "中柱 / 盖板数量",
-      "note": "中柱 = 固数 - 1；盖板固定 2；无头（无搓头）X开 无固扇，二者均为 0",
+      "note": "中柱 = 固数 - 1；盖板固定 2；无头（无摇头）X开 无固扇，二者均为 0",
       "coverQty": 2,
       "zeroQty": 0,
-      "noneGuMatch": "无搓头|无头"
+      "noneGuMatch": "无摇头|无头"
+    },
+    "edgeQty": {
+      "title": "边封数量 = 基础数 × 窗个数",
+      "base": 2
+    },
+    "noUpperFixed": {
+      "title": "无摇头窗型：光勾企取「无上固定窗型参数设置」区块",
+      "match": "无摇头|无头",
+      "normalGgq": { "outer": "b1", "inner": "b2" },
+      "noUpperGgq": { "outer": "d1", "inner": "d2" },
+      "refOverride": { "b1": "d1", "b2": "d2" }
+    },
+    "windowQty": {
+      "title": "打印表右侧各列的数量按窗个数放大",
+      "baseEach": 2,
+      "meshSheetPerWindow": 1,
+      "areaByWindow": true
     }
   },
   "schemes": [
@@ -1206,7 +1225,7 @@
       }
       var ROWS = allRows();
 
-      /* 上下方自动取值：按窗型文字判断固数，三固→b5、四固→b6、其余（两固/一固/拼窗/无搓头）→b4
+      /* 上下方自动取值：按窗型文字判断固数，三固→b5、四固→b6、其余（两固/一固/拼窗/无摇头）→b4
          b4/b5/b6 均为 (宽−X)/2、/3、/4，只依赖 W 与常量，可用 S=0 单独先算，避免循环依赖 */
       function sFormulaId() {
         var s = shapeState || '';
@@ -1222,7 +1241,7 @@
       }
 
       /* 玻璃固玻宽按窗型自动选择：一固→c5、两固→c6、三固→c7、四固→c8，
-         窗型文字里没有「X固」的（如「无搓头…」）走 shapes.glass.default（默认两固 c6）。
+         窗型文字里没有「X固」的（如「无摇头…」）走 shapes.glass.default（默认两固 c6）。
          映射规则统一放在 #formulaData.shapes.glass，后期新增固数只改 JSON，不用动 JS。 */
       function glassWidthId() {
         var cfg = (BASE.shapes && BASE.shapes.glass) || {};
@@ -1240,7 +1259,7 @@
 
       /* 玻璃数量按「X固Y开」解析：上方扇玻 × 开数 Y、下方固玻 × 固数 X。
          中文数字与兜底值放在 #formulaData.shapes.glassQty，以后加「五固五开」只改 JSON。
-         「无搓头四开」没有「X固」→ 固数用 defaultGu；拼窗名称末尾的 x2 是窗体倍数，
+         「无摇头四开」没有「X固」→ 固数用 defaultGu；拼窗名称末尾的 x2 是窗体倍数，
          按用户口径「X固Y开」只取固/开数，不参与玻璃片数计算。 */
       function shapeCounts() {
         var cfg = (BASE.shapes && BASE.shapes.glassQty) || {};
@@ -1271,7 +1290,7 @@
          中柱 / 盖板数量（规则统一存于 #formulaData.shapes.pillarQty）
            1) 中柱 = 固数 - 1：一固→0、两固→1、三固→2、四固→3
            2) 盖板固定 = coverQty（默认 2）
-           3) 无「X固」的无头 / 无搓头 X开 窗型：中柱、盖板都为 0
+           3) 无「X固」的无头 / 无摇头 X开 窗型：中柱、盖板都为 0
            4) 拼窗名称末尾的 x2 只是窗体倍数，与玻璃数量口径一致，不乘入数量
          注意：这里必须重新解析「X固」并允许 gu=null，不能直接复用 shapeCounts()，
          因为它对无固窗型会用 defaultGu=2 兜底，那样无头窗型会算出 1 根中柱。
@@ -1285,7 +1304,7 @@
         var gu = null, m = null, noHead = false;
         try { m = s.match(new RegExp('([' + keys + '])固')); } catch (e) { }
         if (m) gu = digits[m[1]];
-        try { noHead = new RegExp(cfg.noneGuMatch || '无搓头|无头').test(s); } catch (e) { }
+        try { noHead = new RegExp(cfg.noneGuMatch || '无摇头|无头').test(s); } catch (e) { }
         var zero  = cfg.zeroQty  === undefined ? 0 : Number(cfg.zeroQty);
         var cover = cfg.coverQty === undefined ? 2 : Number(cfg.coverQty);
         if (gu === null) {
@@ -1302,6 +1321,25 @@
           pillar: p, cover: cover, gu: gu, noHead: false, label: s,
           desc: gu + '固 → 中柱 ' + p + '（固数-1），盖板固定 ' + cover
         };
+      }
+
+      /* ============================================================
+         无摇头（无上固定）窗型的光勾企取值（配置：shapes.noUpperFixed）
+           常规窗型 → 页扇设置 b1/b2（推窗高 T − 常量）
+           无摇头窗型 → 无上固定窗型参数设置 d1/d2（高 H − 常量）
+         refOverride 让纱网公式里引用 b1/b2 的地方自动切到 d1/d2，
+         保证「光勾企」在打印表与纱网压边里是同一个数。
+         ============================================================ */
+      function noUpperFixedCfg() { return (BASE.shapes && BASE.shapes.noUpperFixed) || {}; }
+      function isNoUpperFixedShape() {
+        try { return new RegExp(noUpperFixedCfg().match || '无摇头|无头').test(String(shapeState || '')); }
+        catch (e) { return false; }
+      }
+      function ggqIds() {
+        var cfg = noUpperFixedCfg();
+        return isNoUpperFixedShape()
+          ? (cfg.noUpperGgq || { outer: 'd1', inner: 'd2' })
+          : (cfg.normalGgq  || { outer: 'b1', inner: 'b2' });
       }
 
       /* ================= 纱网自动计算（规则统一存于 #formulaData 的 mesh 节点） =================
@@ -1437,7 +1475,10 @@
         var mr = meshRule(), mc = meshCuts(mr);
         function mref(ref) {
           if (ref === 'S') return V.S;
-          return valueMap[ref] === undefined ? null : valueMap[ref];
+          /* 无摇头窗型下，纱网公式引用的「光勾企」b1/b2 改取 d1/d2 */
+          var ov = noUpperFixedCfg().refOverride || {};
+          var key = (isNoUpperFixedShape() && ov[ref]) ? ov[ref] : ref;
+          return valueMap[key] === undefined ? null : valueMap[key];
         }
         var mAv = mref(mr.a.ref), mBv = mref(mr.b.ref);
         var mCa = numOrNull(mc.a), mCb = numOrNull(mc.b);
@@ -1634,6 +1675,32 @@
       function winCount() { return normWinCount($('pQty').value); }
       $('pQty').addEventListener('change', function () { this.value = String(winCount()); });
 
+      /* 边封实际数量 = 基础数（JSON shapes.edgeQty.base，默认 2）× 窗个数 */
+      function edgeQty() {
+        var cfg = (BASE.shapes && BASE.shapes.edgeQty) || {};
+        var base = cfg.base === undefined ? 2 : Number(cfg.base);
+        var n = winCount();
+        return { base: base, count: n, total: base * n };
+      }
+
+      /* ============================================================
+         打印表右侧 7 列统一按窗个数放大（配置：shapes.windowQty）
+           each      光勾企 / 上下方 / 竖纱 / 横纱 的数量后缀（基础 2 × 窗个数）
+           meshSheet 纱网尺寸列下方的片数（每窗 1 片 × 窗个数）
+           n         玻璃数量的乘数（扇玻 开数×n、固玻 固数×n）
+           areaByWindow 平方列用总面积；订单编号仍保留单樘面积
+         ============================================================ */
+      function printQty() {
+        var cfg = (BASE.shapes && BASE.shapes.windowQty) || {};
+        var n = winCount();
+        var base = cfg.baseEach === undefined ? 2 : Number(cfg.baseEach);
+        var per  = cfg.meshSheetPerWindow === undefined ? 1 : Number(cfg.meshSheetPerWindow);
+        return {
+          n: n, baseEach: base, each: base * n, meshSheet: per * n,
+          areaByWindow: cfg.areaByWindow !== false
+        };
+      }
+
       /* ================= 公式方案：下拉 / 新建 / 保存 / 删除 ================= */
       function refreshSelect() {
         var html = Object.keys(store.schemes).map(function (name) {
@@ -1810,7 +1877,13 @@
       function buildPrintPaper() {
         var W = pVal('pW'), H = pVal('pH'), S = pVal('pS');
         var a1 = resNum('a1'), a2 = resNum('a2'), a3 = resNum('a3'), a4 = resNum('a4');
-        var b1 = resNum('b1'), b2 = resNum('b2'), b3 = resNum('b3');
+        var b3 = resNum('b3');
+        /* 光勾企：无摇头窗型取 d1/d2，其余取 b1/b2 */
+        var gids = ggqIds();
+        var ggqOuter = resNum(gids.outer), ggqInner = resNum(gids.inner);
+        /* 边封数量随窗个数成倍增加；右侧 7 列统一取同一乘数 */
+        var eq = edgeQty();
+        var pq = printQty();
         /* 横纱 = 上下方 + 常量（公式行 b7），打印表单必须取公式结果，不能直接取 S */
         var b7 = resNum('b7');
         var hs = (b7 === null ? S : b7);   /* 方案未填 b7 常量时保持旧行为，用上下方兜底 */
@@ -1824,12 +1897,16 @@
         var pc = pillarCover();
         var area = (W === null || H === null) ? null : Math.round(W * H / 1000000 * 100) / 100;
         var areaTxt = area === null ? '—' : String(area);
+        /* 平方列按总面积（单樘面积 × 窗个数）；订单编号仍保留单樘面积 */
+        var areaAll = area === null ? null : Math.round(area * eq.count * 100) / 100;
+        var areaAllTxt = areaAll === null ? '—' : String(areaAll);
         var no = ($('pNo').value || '').trim() || '01';
         var seq = parseInt(no, 10);
         var blanks = isFinite(seq) ? [String(seq + 1), String(seq + 2)] : ['02', '03'];
 
         /* 光勾企：内外值一致时合并为一个数，不同时用 / 并列 */
-        var ggq = (b1 !== null && b2 !== null && b1 !== b2) ? nTxt(b1) + '/' + nTxt(b2) : nTxt(b1);
+        var ggq = (ggqOuter !== null && ggqInner !== null && ggqOuter !== ggqInner)
+          ? nTxt(ggqOuter) + '/' + nTxt(ggqInner) : nTxt(ggqOuter);
 
         /* 纱网尺寸 = 压边公式的两个因子 A × B，直接取结果区 mesh 行上的原始数值，
            与「纱网压边」同源，A × B 恒等于结果显示的压边面积（mm²）。 */
@@ -1888,23 +1965,27 @@
           '<td>' + esc(no) + '</td>' +
           '<td class="pf-shape">【' + esc(shapeState || '未选') + '】</td>' +
           '<td><span class="pf-line pf-dash">--------</span><span class="pf-line pf-num">' + nTxt(H) + 'x' + nTxt(W) + 'x' + winCount() + '</span></td>' +
-          '<td class="pf-num">' + nTxt(a1) + ' x2</td>' +
+          '<td class="pf-num">' + nTxt(a1) + ' x' + eq.total + '</td>' +
           '<td>' + pfLines([nTxt(a2) + ' x各1', nTxt(a2) + ' x1']) + '</td>' +
           '<td>' + pfLines([nTxt(a3) + ' x' + pc.pillar, nTxt(a4) + ' x' + pc.cover]) + '</td>' +
-          '<td class="pf-num">' + ggq + ' x各2</td>' +
-          '<td class="pf-num">' + nTxt(S) + ' x各2</td>' +
-          '<td class="pf-num">' + nTxt(b3) + ' x2</td>' +
-          '<td class="pf-num">' + nTxt(hs) + ' x2</td>' +
-          '<td class="pf-num">' + areaTxt + '</td>' +
+          '<td class="pf-num">' + ggq + ' x各' + pq.each + '</td>' +
+          '<td class="pf-num">' + nTxt(S) + ' x各' + pq.each + '</td>' +
+          '<td class="pf-num">' + nTxt(b3) + ' x' + pq.each + '</td>' +
+          '<td class="pf-num">' + nTxt(hs) + ' x' + pq.each + '</td>' +
+          '<td class="pf-num">' + (pq.areaByWindow ? areaAllTxt : areaTxt) + '</td>' +
           '<td>' + pfLines([
-            nTxt(c1) + 'x' + nTxt(c2) + ' x' + cnt.kai,
-            nTxt(gW) + 'x' + nTxt(c4) + ' x' + cnt.gu
+            nTxt(c1) + 'x' + nTxt(c2) + ' x' + (cnt.kai * pq.n),
+            nTxt(gW) + 'x' + nTxt(c4) + ' x' + (cnt.gu * pq.n)
           ]) + '</td>' +
-          '<td class="pf-mesh">' + meshSizeTxt + '</td>' +
+          '<td class="pf-mesh">' + meshSizeTxt +
+            '<span class="pf-line pf-mesh-qty">x' + pq.meshSheet + '</span></td>' +
         '</tr>' + blanks.map(pfBlankRow).join('') + '</tbody>';
 
         var meta = [
           '窗个数：<b>' + winCount() + ' 个</b>',
+          '边封数量：<b>×' + eq.total + '</b>（基础 ' + eq.base + ' × 窗个数 ' + eq.count + '）',
+          '数量放大：<b>×' + pq.n + '</b>（光勾企 / 上下方 / 竖纱 / 横纱 各 ' + pq.baseEach + '→' + pq.each + '；玻璃、纱网片数同乘）',
+          '平方：<b>' + (pq.areaByWindow ? areaAllTxt : areaTxt) + ' ㎡</b>（单樘 ' + areaTxt + ' × ' + pq.n + '，订单编号仍写单樘）',
           '客户：<b>' + esc(($('pCustomer').value || '').trim() || '未填') + '</b>',
           '电话：<b>' + esc(phone || '未填') + '</b>',
           '备注：<b>' + esc(remark || '未填') + '</b>',
@@ -1916,12 +1997,15 @@
         if (fixedEnabled('up')) meta.push('上固定窗高：<b>' + esc($('pFU').value || '—') + '</b>');
         var q = normQty(meshState.qty);
         var pTotal = resNum('parts');
-        meta.push('纱网压边：<b>' + nTxt(resNum('mesh')) + ' mm²</b>（尺寸 ' + meshSizeTxt + '）');
+        meta.push('纱网压边：<b>' + nTxt(resNum('mesh')) + ' mm²</b>（单樘尺寸 ' + meshSizeTxt + '，共 ' + pq.meshSheet + ' 片）');
         meta.push('纱网数量：<b>' + (q === '' ? '未填' : q + ' 片') + '</b>');
         meta.push('配件合计：<b>' + (pTotal === null ? '未填' : nTxt(pTotal) + ' 个') + '</b>');
         meta.push('玻璃固玻宽：<b>' + esc(gName) + '（' + esc(gId) + '）</b>');
-        meta.push('玻璃数量：<b>扇玻 ×' + cnt.kai + ' / 固玻 ×' + cnt.gu + '</b>（' + esc(cnt.label) + '）');
+        meta.push('玻璃数量：<b>扇玻 ×' + (cnt.kai * pq.n) + ' / 固玻 ×' + (cnt.gu * pq.n) + '</b>（单樘 ×' + cnt.kai + ' / ×' + cnt.gu + '，' + esc(cnt.label) + '）');
         meta.push('中柱 / 盖板：<b>×' + pc.pillar + ' / ×' + pc.cover + '</b>（' + esc(pc.desc) + '）');
+        meta.push('光勾企来源：<b>' + (isNoUpperFixedShape()
+          ? '无上固定窗型参数设置 ' + esc(gids.outer) + '/' + esc(gids.inner) + '（高 − 常量，纱网因子同步）'
+          : '页扇设置 ' + esc(gids.outer) + '/' + esc(gids.inner) + '（推窗高 − 常量）') + '</b>');
         meta.push('横纱：<b>' + (b7 === null
           ? '常量未填，暂用上下方 ' + nTxt(S) + ' mm'
           : nTxt(b7) + ' mm（上下方 ' + nTxt(S) + ' + 常量）') + '</b>');
