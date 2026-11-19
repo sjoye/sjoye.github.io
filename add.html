@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>下料计算系统1119</title>
+  <title>下料计算系统 · 公式配置</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -423,6 +423,8 @@
     .pf-num { color: #1a4fa0; font-weight: 600; white-space: nowrap; }
     /* 拼窗窗型边封列第二行「双边封 ×1」：文字用深色，与蓝色尺寸数字区分，需带 td 提升优先级 */
     .pf-table td.pf-num .pf-double-edge { font-size: 10.5px; color: #333; font-weight: 700; white-space: nowrap; }
+    /* 无摇头三开：光企 / 勾企数量不同时拆两行标注，小字号避免 8.4% 列宽溢出 */
+    .pf-table td.pf-num .pf-qty-tag { font-size: 10px; letter-spacing: -.2px; }
     .pf-table td.pf-shape { font-size: 11.5px; font-weight: 700; color: #111; white-space: nowrap; }
     /* 纱网尺寸 A X B：蓝色加粗，略缩字号保证 13 列下不换行；同样需带 td 提升优先级 */
     .pf-table td.pf-mesh { font-size: 11px; color: #1a4fa0; font-weight: 700; white-space: nowrap; letter-spacing: -.2px; }
@@ -865,6 +867,17 @@
       "match": "拼窗",
       "label": "双边封",
       "qty": 1
+    },
+    "noHeadQty": {
+      "title": "无摇头窗型：光企 / 勾企 / 竖纱单窗数量按开数取，再乘窗个数",
+      "multiplyByWindowCount": true,
+      "labels": { "guang": "光企", "gou": "勾企" },
+      "default": { "guang": 4, "gou": 4, "meshV": 4 },
+      "rules": [
+        { "kai": 2, "guang": 4, "gou": 4, "meshV": 4 },
+        { "kai": 3, "guang": 2, "gou": 4, "meshV": 2 },
+        { "kai": 4, "guang": 4, "gou": 4, "meshV": 4 }
+      ]
     }
   },
   "schemes": [
@@ -1376,6 +1389,31 @@
       function hasFixedGlass() {
         var cfg = noUpperFixedCfg();
         return !(isNoUpperFixedShape() && cfg.noFixedGlass !== false);
+      }
+
+      /* ============================================================
+         无摇头窗型：光企 / 勾企 / 竖纱的单窗数量按「几开」取（配置 shapes.noHeadQty）
+           无摇头四开 / 两开：光企 4、勾企 4、竖纱 4
+           无摇头三开：       光企 2、勾企 4、竖纱 2
+           guang/gou/meshV 是已乘窗个数的结果；base* 保留单窗原值供信息条展示。
+           非无摇头窗型返回 null，沿用 printQty() 的统一放大口径（各 2×N）。
+         ============================================================ */
+      function noHeadQty(kai) {
+        if (!isNoUpperFixedShape()) return null;
+        var cfg = (BASE.shapes && BASE.shapes.noHeadQty) || {};
+        var rules = cfg.rules || [], r = null, i;
+        for (i = 0; i < rules.length; i++) {
+          if (Number(rules[i].kai) === Number(kai)) { r = rules[i]; break; }
+        }
+        if (!r) r = cfg.default || { guang: 4, gou: 4, meshV: 4 };
+        var n = cfg.multiplyByWindowCount === false ? 1 : winCount();
+        var bG = Number(r.guang), bO = Number(r.gou), bV = Number(r.meshV);
+        return {
+          kai: kai, n: n,
+          baseGuang: bG, baseGou: bO, baseMeshV: bV,
+          guang: bG * n, gou: bO * n, meshV: bV * n,
+          labels: cfg.labels || { guang: '光企', gou: '勾企' }
+        };
       }
 
       /* ================= 纱网自动计算（规则统一存于 #formulaData 的 mesh 节点） =================
@@ -1947,6 +1985,8 @@
         var gW = resNum(gId), gName = gRow ? gRow.n : gId;
         /* 玻璃数量：X固Y开 → 扇玻 × 开数、固玻 × 固数 */
         var cnt = shapeCounts();
+        /* 无摇头窗型：光企 / 勾企 / 竖纱数量按开数口径，覆盖默认 pq.each */
+        var nq = noHeadQty(cnt.kai);
         /* 无摇头窗型无下方固定玻璃 → 玻璃列第二行留空 */
         var hasFixed = hasFixedGlass();
         /* 中柱 / 盖板数量：中柱 = 固数-1、盖板固定 2、无头 X开 二者为 0 */
@@ -1963,6 +2003,20 @@
         /* 光勾企：内外值一致时合并为一个数，不同时用 / 并列 */
         var ggq = (ggqOuter !== null && ggqInner !== null && ggqOuter !== ggqInner)
           ? nTxt(ggqOuter) + '/' + nTxt(ggqInner) : nTxt(ggqOuter);
+        /* 光企 / 勾企数量相同时仍用「x各N」；不同（无摇头三开 2/4）时拆两行标注，
+           因为「x各N」表达不了两种数量，容易让下料的人少切料。 */
+        var ggqCell, meshVQty;
+        if (nq && nq.guang !== nq.gou) {
+          ggqCell = '<span class="pf-line pf-num pf-qty-tag">' + esc(nq.labels.guang) + ' ' +
+                      nTxt(ggqOuter) + ' x' + nq.guang + '</span>' +
+                    '<span class="pf-line pf-num pf-qty-tag">' + esc(nq.labels.gou) + ' ' +
+                      nTxt(ggqInner) + ' x' + nq.gou + '</span>';
+        } else if (nq) {
+          ggqCell = ggq + ' x各' + nq.guang;
+        } else {
+          ggqCell = ggq + ' x各' + pq.each;
+        }
+        meshVQty = nq ? nq.meshV : pq.each;
 
         /* 纱网尺寸 = 压边公式的两个因子 A × B，直接取结果区 mesh 行上的原始数值，
            与「纱网压边」同源，A × B 恒等于结果显示的压边面积（mm²）。 */
@@ -2032,9 +2086,9 @@
           /* 上下滑 / 上固 / 上滑：基础 1 根，同样按窗个数放大 */
           '<td>' + pfLines([nTxt(a2) + ' x各' + pq.slideEach, nTxt(a2) + ' x' + pq.slideEach]) + '</td>' +
           '<td>' + pfLines([nTxt(a3) + ' x' + pc.pillar, nTxt(a4) + ' x' + pc.cover]) + '</td>' +
-          '<td class="pf-num">' + ggq + ' x各' + pq.each + '</td>' +
+          '<td class="pf-num">' + ggqCell + '</td>' +
           '<td class="pf-num">' + nTxt(S) + ' x各' + pq.each + '</td>' +
-          '<td class="pf-num">' + nTxt(meshV) + ' x' + pq.each + '</td>' +
+          '<td class="pf-num">' + nTxt(meshV) + ' x' + meshVQty + '</td>' +
           '<td class="pf-num">' + nTxt(hs) + ' x' + pq.each + '</td>' +
           '<td class="pf-num">' + (pq.areaByWindow ? areaAllTxt : areaTxt) + '</td>' +
           '<td>' + pfLines([
@@ -2051,7 +2105,13 @@
           '边封数量：<b>×' + eq.total + '</b>（基础 ' + eq.base + ' × 窗个数 ' + eq.count + '）',
           isCw ? '双边封：<b>×' + cwQty + ' 根</b>（长度同边封 ' + nTxt(a1) +
             ' mm，拼窗窗型固定 ' + cwQty + ' 根，不乘窗个数）' : '',
-          '数量放大：<b>×' + pq.n + '</b>（上下滑 / 上固 / 上滑 ' + pq.slideBase + '→' + pq.slideEach + '；光勾企 / 上下方 / 竖纱 / 横纱 各 ' + pq.baseEach + '→' + pq.each + '；玻璃、纱网片数同乘）',
+          '数量放大：<b>×' + pq.n + '</b>（上下滑 / 上固 / 上滑 ' + pq.slideBase + '→' + pq.slideEach +
+            '；上下方 / 横纱 各 ' + pq.baseEach + '→' + pq.each +
+            (nq ? '；光勾企 / 竖纱按无摇头口径' : '；光勾企 / 竖纱 各 ' + pq.baseEach + '→' + pq.each) +
+            '；玻璃、纱网片数同乘）',
+          nq ? '无摇头数量：<b>' + nq.kai + '开 · 光企 ×' + nq.guang + ' / 勾企 ×' + nq.gou +
+            ' / 竖纱 ×' + nq.meshV + '</b>（单窗 ' + nq.baseGuang + '/' + nq.baseGou + '/' +
+            nq.baseMeshV + ' × 窗个数 ' + nq.n + '）' : '',
           '平方：<b>' + (pq.areaByWindow ? areaAllTxt : areaTxt) + ' ㎡</b>（单樘 ' + areaTxt + ' × ' + pq.n + '，订单编号仍写单樘）',
           '客户：<b>' + esc(($('pCustomer').value || '').trim() || '未填') + '</b>',
           '电话：<b>' + esc(phone || '未填') + '</b>',
@@ -2074,6 +2134,11 @@
           ? ' / 固玻 ×' + (cnt.gu * pq.n) + '</b>（单樘 ×' + cnt.kai + ' / ×' + cnt.gu + '，' + esc(cnt.label) + '）'
           : ' / 固玻 无</b>（' + esc(cnt.label) + '：无下方固定玻璃，第二行留空）'));
         meta.push('中柱 / 盖板：<b>×' + pc.pillar + ' / ×' + pc.cover + '</b>（' + esc(pc.desc) + '）');
+        /* 无摇头三开专属提示：光企 / 勾企数量不同，打印表已拆两行标注 */
+        if (nq && nq.guang !== nq.gou) {
+          meta.push('光勾企拆分：<b>' + esc(nq.labels.guang) + ' ×' + nq.guang + ' / ' +
+            esc(nq.labels.gou) + ' ×' + nq.gou + '</b>（' + nq.kai + '开口径，两行分别下料）');
+        }
         meta.push('取值来源：<b>光勾企 ' + esc(gids.outer) + '/' + esc(gids.inner) +
           '，竖纱 ' + esc(mvId) + ' = ' + nTxt(meshV) + ' mm，玻璃高 ' + esc(gh.sash) +
           (hasFixed ? '/' + esc(gh.fixed) : '（第二行无固玻）') +
