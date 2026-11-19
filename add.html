@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>下料计算系统 · 公式配置</title>
+  <title>下料计算系统1119</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -421,6 +421,8 @@
     .pf-contact-empty { color: #b9bdc7; letter-spacing: -1px; }
     .pf-pink { color: #e600a9 !important; font-weight: 700 !important; letter-spacing: 1px; white-space: nowrap; }
     .pf-num { color: #1a4fa0; font-weight: 600; white-space: nowrap; }
+    /* 拼窗窗型边封列第二行「双边封 ×1」：文字用深色，与蓝色尺寸数字区分，需带 td 提升优先级 */
+    .pf-table td.pf-num .pf-double-edge { font-size: 10.5px; color: #333; font-weight: 700; white-space: nowrap; }
     .pf-table td.pf-shape { font-size: 11.5px; font-weight: 700; color: #111; white-space: nowrap; }
     /* 纱网尺寸 A X B：蓝色加粗，略缩字号保证 13 列下不换行；同样需带 td 提升优先级 */
     .pf-table td.pf-mesh { font-size: 11px; color: #1a4fa0; font-weight: 700; white-space: nowrap; letter-spacing: -.2px; }
@@ -842,19 +844,27 @@
       "base": 2
     },
     "noUpperFixed": {
-      "title": "无摇头窗型：光勾企 / 竖纱 / 玻璃高取「无上固定窗型参数设置」区块",
+      "title": "无摇头窗型：光勾企 / 竖纱 / 玻璃高取「无上固定窗型参数设置」区块，且无下方固定玻璃",
       "match": "无摇头|无头",
       "normalGgq": { "outer": "b1", "inner": "b2" },
       "noUpperGgq": { "outer": "d1", "inner": "d2" },
       "normalMeshV": "b3",
       "noUpperMeshV": "d3",
+      "noFixedGlass": true,
       "refOverride": { "b1": "d1", "b2": "d2", "b3": "d3", "c2": "d4", "c4": "d5" }
     },
     "windowQty": {
-      "title": "打印表右侧各列的数量按窗个数放大",
+      "title": "打印表各列的数量按窗个数放大",
       "baseEach": 2,
+      "slideBaseEach": 1,
       "meshSheetPerWindow": 1,
       "areaByWindow": true
+    },
+    "combinedWindow": {
+      "title": "拼窗窗型：边封列在原有边封数据下方多一行「双边封 ×1」",
+      "match": "拼窗",
+      "label": "双边封",
+      "qty": 1
     }
   },
   "schemes": [
@@ -1332,6 +1342,7 @@
          无摇头窗型没有推窗高，T 常为空，继续用 b3 / c2 / c4 会让打印表出现「—」。
          refOverride 是统一映射表：纱网公式引用 b1/b2/b3 时自动切到 d1/d2/d3；
          打印表的玻璃高按 c2→d4、c4→d5 切到无上固定区块。
+         另外无摇头窗型没有「下方固定玻璃」，玻璃列第二行留空（noFixedGlass）。
          ============================================================ */
       function noUpperFixedCfg() { return (BASE.shapes && BASE.shapes.noUpperFixed) || {}; }
       function isNoUpperFixedShape() {
@@ -1358,6 +1369,13 @@
         return isNoUpperFixedShape()
           ? { sash: ov.c2 || 'd4', fixed: ov.c4 || 'd5' }
           : { sash: 'c2', fixed: 'c4' };
+      }
+      /* 无摇头窗型没有下方固定玻璃：打印表玻璃第二行（固玻）留空。
+         配置 shapes.noUpperFixed.noFixedGlass，默认 true；改成 false 可恢复两行。
+         注意只影响打印表玻璃列，结果区的 c5~c8 公式行仍照常显示。 */
+      function hasFixedGlass() {
+        var cfg = noUpperFixedCfg();
+        return !(isNoUpperFixedShape() && cfg.noFixedGlass !== false);
       }
 
       /* ================= 纱网自动计算（规则统一存于 #formulaData 的 mesh 节点） =================
@@ -1701,8 +1719,18 @@
         return { base: base, count: n, total: base * n };
       }
 
+      /* 拼窗窗型判定（配置：shapes.combinedWindow）
+         「拼窗」是窗型选项的名称前缀（拼窗一固两开x2 / 拼窗两固两开x2），
+         不是 windowTypes 里的分类（正常 / 下固定 / 上下固定）。 */
+      function combinedWindowCfg() { return (BASE.shapes && BASE.shapes.combinedWindow) || {}; }
+      function isCombinedWindow() {
+        try { return new RegExp(combinedWindowCfg().match || '拼窗').test(String(shapeState || '')); }
+        catch (e) { return false; }
+      }
+
       /* ============================================================
-         打印表右侧 7 列统一按窗个数放大（配置：shapes.windowQty）
+         打印表各列数量统一按窗个数放大（配置：shapes.windowQty）
+           slideEach 上下滑 / 上固 / 上滑 的数量后缀（基础 1 × 窗个数）
            each      光勾企 / 上下方 / 竖纱 / 横纱 的数量后缀（基础 2 × 窗个数）
            meshSheet 纱网尺寸列下方的片数（每窗 1 片 × 窗个数）
            n         玻璃数量的乘数（扇玻 开数×n、固玻 固数×n）
@@ -1711,10 +1739,12 @@
       function printQty() {
         var cfg = (BASE.shapes && BASE.shapes.windowQty) || {};
         var n = winCount();
-        var base = cfg.baseEach === undefined ? 2 : Number(cfg.baseEach);
-        var per  = cfg.meshSheetPerWindow === undefined ? 1 : Number(cfg.meshSheetPerWindow);
+        var base  = cfg.baseEach === undefined ? 2 : Number(cfg.baseEach);
+        var sBase = cfg.slideBaseEach === undefined ? 1 : Number(cfg.slideBaseEach);
+        var per   = cfg.meshSheetPerWindow === undefined ? 1 : Number(cfg.meshSheetPerWindow);
         return {
-          n: n, baseEach: base, each: base * n, meshSheet: per * n,
+          n: n, baseEach: base, each: base * n,
+          slideBase: sBase, slideEach: sBase * n, meshSheet: per * n,
           areaByWindow: cfg.areaByWindow !== false
         };
       }
@@ -1903,6 +1933,9 @@
         /* 边封数量随窗个数成倍增加；右侧 7 列统一取同一乘数 */
         var eq = edgeQty();
         var pq = printQty();
+        /* 拼窗窗型：边封列额外多一行「双边封 ×1」（数量不随窗个数放大，按字面口径） */
+        var cw = combinedWindowCfg(), isCw = isCombinedWindow();
+        var cwQty = cw.qty === undefined ? 1 : Number(cw.qty);
         /* 横纱 = 上下方 + 常量（公式行 b7），打印表单必须取公式结果，不能直接取 S */
         var b7 = resNum('b7');
         var hs = (b7 === null ? S : b7);   /* 方案未填 b7 常量时保持旧行为，用上下方兜底 */
@@ -1914,6 +1947,8 @@
         var gW = resNum(gId), gName = gRow ? gRow.n : gId;
         /* 玻璃数量：X固Y开 → 扇玻 × 开数、固玻 × 固数 */
         var cnt = shapeCounts();
+        /* 无摇头窗型无下方固定玻璃 → 玻璃列第二行留空 */
+        var hasFixed = hasFixedGlass();
         /* 中柱 / 盖板数量：中柱 = 固数-1、盖板固定 2、无头 X开 二者为 0 */
         var pc = pillarCover();
         var area = (W === null || H === null) ? null : Math.round(W * H / 1000000 * 100) / 100;
@@ -1982,12 +2017,20 @@
           '</tr>' +
         '</thead>';
 
+        /* 边封列：非拼窗保持原单行文本；拼窗时第一行原样、第二行补「双边封 ×N」 */
+        var edgeLine = nTxt(a1) + ' x' + eq.total;
+        var edgeCell = isCw
+          ? '<span class="pf-line pf-num">' + edgeLine + '</span>' +
+            '<span class="pf-line pf-double-edge">' + esc(cw.label || '双边封') + ' x' + cwQty + '</span>'
+          : edgeLine;
+
         var body = '<tbody><tr>' +
           '<td>' + esc(no) + '</td>' +
           '<td class="pf-shape">【' + esc(shapeState || '未选') + '】</td>' +
           '<td><span class="pf-line pf-dash">--------</span><span class="pf-line pf-num">' + nTxt(H) + 'x' + nTxt(W) + 'x' + winCount() + '</span></td>' +
-          '<td class="pf-num">' + nTxt(a1) + ' x' + eq.total + '</td>' +
-          '<td>' + pfLines([nTxt(a2) + ' x各1', nTxt(a2) + ' x1']) + '</td>' +
+          '<td class="pf-num">' + edgeCell + '</td>' +
+          /* 上下滑 / 上固 / 上滑：基础 1 根，同样按窗个数放大 */
+          '<td>' + pfLines([nTxt(a2) + ' x各' + pq.slideEach, nTxt(a2) + ' x' + pq.slideEach]) + '</td>' +
           '<td>' + pfLines([nTxt(a3) + ' x' + pc.pillar, nTxt(a4) + ' x' + pc.cover]) + '</td>' +
           '<td class="pf-num">' + ggq + ' x各' + pq.each + '</td>' +
           '<td class="pf-num">' + nTxt(S) + ' x各' + pq.each + '</td>' +
@@ -1996,7 +2039,8 @@
           '<td class="pf-num">' + (pq.areaByWindow ? areaAllTxt : areaTxt) + '</td>' +
           '<td>' + pfLines([
             nTxt(c1) + 'x' + nTxt(c2) + ' x' + (cnt.kai * pq.n),
-            nTxt(gW) + 'x' + nTxt(c4) + ' x' + (cnt.gu * pq.n)
+            /* 第二行是下方固玻：无摇头窗型没有这块玻璃，用空白行占位保持两行对齐 */
+            hasFixed ? (nTxt(gW) + 'x' + nTxt(c4) + ' x' + (cnt.gu * pq.n)) : '&nbsp;'
           ]) + '</td>' +
           '<td class="pf-mesh">' + meshSizeTxt +
             '<span class="pf-line pf-mesh-qty">x' + pq.meshSheet + '</span></td>' +
@@ -2005,7 +2049,9 @@
         var meta = [
           '窗个数：<b>' + winCount() + ' 个</b>',
           '边封数量：<b>×' + eq.total + '</b>（基础 ' + eq.base + ' × 窗个数 ' + eq.count + '）',
-          '数量放大：<b>×' + pq.n + '</b>（光勾企 / 上下方 / 竖纱 / 横纱 各 ' + pq.baseEach + '→' + pq.each + '；玻璃、纱网片数同乘）',
+          isCw ? '双边封：<b>×' + cwQty + ' 根</b>（长度同边封 ' + nTxt(a1) +
+            ' mm，拼窗窗型固定 ' + cwQty + ' 根，不乘窗个数）' : '',
+          '数量放大：<b>×' + pq.n + '</b>（上下滑 / 上固 / 上滑 ' + pq.slideBase + '→' + pq.slideEach + '；光勾企 / 上下方 / 竖纱 / 横纱 各 ' + pq.baseEach + '→' + pq.each + '；玻璃、纱网片数同乘）',
           '平方：<b>' + (pq.areaByWindow ? areaAllTxt : areaTxt) + ' ㎡</b>（单樘 ' + areaTxt + ' × ' + pq.n + '，订单编号仍写单樘）',
           '客户：<b>' + esc(($('pCustomer').value || '').trim() || '未填') + '</b>',
           '电话：<b>' + esc(phone || '未填') + '</b>',
@@ -2013,7 +2059,7 @@
           '型材系列：<b>' + esc(store.active) + '</b>',
           '窗型分类：<b>' + esc(winTypeCfg().label) + '</b>',
           '高低扇：<b>' + ($('highLow').checked ? '是' : '否') + '</b>'
-        ];
+        ].filter(function (x) { return x !== ''; });
         if (fixedEnabled('down')) meta.push('下固定窗高：<b>' + esc($('pFD').value || '—') + '</b>');
         if (fixedEnabled('up')) meta.push('上固定窗高：<b>' + esc($('pFU').value || '—') + '</b>');
         var q = normQty(meshState.qty);
@@ -2021,11 +2067,16 @@
         meta.push('纱网压边：<b>' + nTxt(resNum('mesh')) + ' mm²</b>（单樘尺寸 ' + meshSizeTxt + '，共 ' + pq.meshSheet + ' 片）');
         meta.push('纱网数量：<b>' + (q === '' ? '未填' : q + ' 片') + '</b>');
         meta.push('配件合计：<b>' + (pTotal === null ? '未填' : nTxt(pTotal) + ' 个') + '</b>');
-        meta.push('玻璃固玻宽：<b>' + esc(gName) + '（' + esc(gId) + '）</b>');
-        meta.push('玻璃数量：<b>扇玻 ×' + (cnt.kai * pq.n) + ' / 固玻 ×' + (cnt.gu * pq.n) + '</b>（单樘 ×' + cnt.kai + ' / ×' + cnt.gu + '，' + esc(cnt.label) + '）');
+        meta.push('玻璃固玻宽：<b>' + (hasFixed
+          ? esc(gName) + '（' + esc(gId) + '）'
+          : '不适用（无摇头窗型无下方固定玻璃）') + '</b>');
+        meta.push('玻璃数量：<b>扇玻 ×' + (cnt.kai * pq.n) + (hasFixed
+          ? ' / 固玻 ×' + (cnt.gu * pq.n) + '</b>（单樘 ×' + cnt.kai + ' / ×' + cnt.gu + '，' + esc(cnt.label) + '）'
+          : ' / 固玻 无</b>（' + esc(cnt.label) + '：无下方固定玻璃，第二行留空）'));
         meta.push('中柱 / 盖板：<b>×' + pc.pillar + ' / ×' + pc.cover + '</b>（' + esc(pc.desc) + '）');
         meta.push('取值来源：<b>光勾企 ' + esc(gids.outer) + '/' + esc(gids.inner) +
-          '，竖纱 ' + esc(mvId) + ' = ' + nTxt(meshV) + ' mm，玻璃高 ' + esc(gh.sash) + '/' + esc(gh.fixed) +
+          '，竖纱 ' + esc(mvId) + ' = ' + nTxt(meshV) + ' mm，玻璃高 ' + esc(gh.sash) +
+          (hasFixed ? '/' + esc(gh.fixed) : '（第二行无固玻）') +
           '</b>（' + (isNoUpperFixedShape()
           ? '无上固定窗型参数设置：高 − 常量，纱网因子同步'
           : '页扇设置 / 玻璃设置：推窗高 − 常量') + '）');
