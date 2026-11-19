@@ -510,7 +510,7 @@
         year: 2026,                    // 限定年份；改成 null 表示每年以下日期都能演示
         /* 允许的日期 [月, 日]：演示期 11 / 14 — 11 / 19（含 19 号当天），
            11 / 20 起整页显示「项目体验到期」。要再延期，往下补 [11, 20] 即可。 */
-        allow: [[11, 19], [11, 20], [11, 21]]
+        allow: [[11, 14], [11, 15], [11, 16], [11, 17], [11, 18], [11, 19]]
       };
 
       function allowed(d) {
@@ -842,11 +842,13 @@
       "base": 2
     },
     "noUpperFixed": {
-      "title": "无摇头窗型：光勾企取「无上固定窗型参数设置」区块",
+      "title": "无摇头窗型：光勾企 / 竖纱 / 玻璃高取「无上固定窗型参数设置」区块",
       "match": "无摇头|无头",
       "normalGgq": { "outer": "b1", "inner": "b2" },
       "noUpperGgq": { "outer": "d1", "inner": "d2" },
-      "refOverride": { "b1": "d1", "b2": "d2" }
+      "normalMeshV": "b3",
+      "noUpperMeshV": "d3",
+      "refOverride": { "b1": "d1", "b2": "d2", "b3": "d3", "c2": "d4", "c4": "d5" }
     },
     "windowQty": {
       "title": "打印表右侧各列的数量按窗个数放大",
@@ -1324,11 +1326,12 @@
       }
 
       /* ============================================================
-         无摇头（无上固定）窗型的光勾企取值（配置：shapes.noUpperFixed）
-           常规窗型 → 页扇设置 b1/b2（推窗高 T − 常量）
-           无摇头窗型 → 无上固定窗型参数设置 d1/d2（高 H − 常量）
-         refOverride 让纱网公式里引用 b1/b2 的地方自动切到 d1/d2，
-         保证「光勾企」在打印表与纱网压边里是同一个数。
+         无摇头（无上固定）窗型的取值（配置：shapes.noUpperFixed）
+           常规窗型   → 页扇设置 b1/b2、b3；玻璃高 c2/c4（都含推窗高 T）
+           无摇头窗型 → 无上固定窗型参数设置 d1/d2、d3、d4/d5（都只依赖高 H）
+         无摇头窗型没有推窗高，T 常为空，继续用 b3 / c2 / c4 会让打印表出现「—」。
+         refOverride 是统一映射表：纱网公式引用 b1/b2/b3 时自动切到 d1/d2/d3；
+         打印表的玻璃高按 c2→d4、c4→d5 切到无上固定区块。
          ============================================================ */
       function noUpperFixedCfg() { return (BASE.shapes && BASE.shapes.noUpperFixed) || {}; }
       function isNoUpperFixedShape() {
@@ -1340,6 +1343,21 @@
         return isNoUpperFixedShape()
           ? (cfg.noUpperGgq || { outer: 'd1', inner: 'd2' })
           : (cfg.normalGgq  || { outer: 'b1', inner: 'b2' });
+      }
+      /* 竖纱行 id：无摇头 → d3（高 − 常量），常规 → b3（推窗高 − 常量） */
+      function meshVId() {
+        var cfg = noUpperFixedCfg();
+        return isNoUpperFixedShape()
+          ? (cfg.noUpperMeshV || 'd3')
+          : (cfg.normalMeshV  || 'b3');
+      }
+      /* 玻璃两行的「高」：无摇头 → d4/d5（内/外扇玻高，H − 常量），常规 → c2/c4（依赖 T）
+         宽度 c1 / gW 不依赖 T，保持原取值。映射同样统一读 refOverride，后期改一处即可。 */
+      function glassHIds() {
+        var ov = noUpperFixedCfg().refOverride || {};
+        return isNoUpperFixedShape()
+          ? { sash: ov.c2 || 'd4', fixed: ov.c4 || 'd5' }
+          : { sash: 'c2', fixed: 'c4' };
       }
 
       /* ================= 纱网自动计算（规则统一存于 #formulaData 的 mesh 节点） =================
@@ -1877,7 +1895,8 @@
       function buildPrintPaper() {
         var W = pVal('pW'), H = pVal('pH'), S = pVal('pS');
         var a1 = resNum('a1'), a2 = resNum('a2'), a3 = resNum('a3'), a4 = resNum('a4');
-        var b3 = resNum('b3');
+        /* 竖纱：无摇头窗型取 d3，其余取 b3（不能用固定 b3，否则 T 为空时列里没数） */
+        var mvId = meshVId(), meshV = resNum(mvId);
         /* 光勾企：无摇头窗型取 d1/d2，其余取 b1/b2 */
         var gids = ggqIds();
         var ggqOuter = resNum(gids.outer), ggqInner = resNum(gids.inner);
@@ -1887,7 +1906,9 @@
         /* 横纱 = 上下方 + 常量（公式行 b7），打印表单必须取公式结果，不能直接取 S */
         var b7 = resNum('b7');
         var hs = (b7 === null ? S : b7);   /* 方案未填 b7 常量时保持旧行为，用上下方兜底 */
-        var c1 = resNum('c1'), c2 = resNum('c2'), c4 = resNum('c4');
+        /* 玻璃高：无摇头取 d4/d5，常规取 c2/c4（T 留空时 c2/c4 会算出「—」） */
+        var gh = glassHIds();
+        var c1 = resNum('c1'), c2 = resNum(gh.sash), c4 = resNum(gh.fixed);
         /* 固玻宽不再写死 c5：按当前窗型选 c5/c6/c7/c8（一固/两固/三固/四固） */
         var gId = glassWidthId(), gRow = glassWidthRow();
         var gW = resNum(gId), gName = gRow ? gRow.n : gId;
@@ -1970,7 +1991,7 @@
           '<td>' + pfLines([nTxt(a3) + ' x' + pc.pillar, nTxt(a4) + ' x' + pc.cover]) + '</td>' +
           '<td class="pf-num">' + ggq + ' x各' + pq.each + '</td>' +
           '<td class="pf-num">' + nTxt(S) + ' x各' + pq.each + '</td>' +
-          '<td class="pf-num">' + nTxt(b3) + ' x' + pq.each + '</td>' +
+          '<td class="pf-num">' + nTxt(meshV) + ' x' + pq.each + '</td>' +
           '<td class="pf-num">' + nTxt(hs) + ' x' + pq.each + '</td>' +
           '<td class="pf-num">' + (pq.areaByWindow ? areaAllTxt : areaTxt) + '</td>' +
           '<td>' + pfLines([
@@ -2003,9 +2024,11 @@
         meta.push('玻璃固玻宽：<b>' + esc(gName) + '（' + esc(gId) + '）</b>');
         meta.push('玻璃数量：<b>扇玻 ×' + (cnt.kai * pq.n) + ' / 固玻 ×' + (cnt.gu * pq.n) + '</b>（单樘 ×' + cnt.kai + ' / ×' + cnt.gu + '，' + esc(cnt.label) + '）');
         meta.push('中柱 / 盖板：<b>×' + pc.pillar + ' / ×' + pc.cover + '</b>（' + esc(pc.desc) + '）');
-        meta.push('光勾企来源：<b>' + (isNoUpperFixedShape()
-          ? '无上固定窗型参数设置 ' + esc(gids.outer) + '/' + esc(gids.inner) + '（高 − 常量，纱网因子同步）'
-          : '页扇设置 ' + esc(gids.outer) + '/' + esc(gids.inner) + '（推窗高 − 常量）') + '</b>');
+        meta.push('取值来源：<b>光勾企 ' + esc(gids.outer) + '/' + esc(gids.inner) +
+          '，竖纱 ' + esc(mvId) + ' = ' + nTxt(meshV) + ' mm，玻璃高 ' + esc(gh.sash) + '/' + esc(gh.fixed) +
+          '</b>（' + (isNoUpperFixedShape()
+          ? '无上固定窗型参数设置：高 − 常量，纱网因子同步'
+          : '页扇设置 / 玻璃设置：推窗高 − 常量') + '）');
         meta.push('横纱：<b>' + (b7 === null
           ? '常量未填，暂用上下方 ' + nTxt(S) + ' mm'
           : nTxt(b7) + ' mm（上下方 ' + nTxt(S) + ' + 常量）') + '</b>');
